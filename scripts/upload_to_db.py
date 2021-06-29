@@ -5,6 +5,8 @@ import cv2
 import imgaug as ia
 from imgaug import augmenters as iaa
 import numpy as np
+import os
+from datetime import datetime
 
 temp = dotenv_values(".env")
 
@@ -57,3 +59,50 @@ def augment_img(img_arrs):
 def hash_id_name(id, name):
     return hash(f"{id}_{name}")
 
+def insert_to_db(mongo_client, id, name, db_path):
+    db = mongo_client[temp["MONGO_DB"]]
+    col= mongo_client[temp["MONO_COLL"]]
+
+    insert_dict = {"reco_id": id, "person_name": name, "db_path": db_path }
+
+    update_query = { "reco_id": id }
+
+    if col.find_one(update_query):        
+        newvalues = { "$set": { "person_name": name, "db_path": db_path } }
+        
+        col.update_one(update_query, newvalues)
+
+        return None, "Updated"
+    
+    x = col.insert_one(insert_dict)
+
+    return x, "Inserted"
+
+
+def save_imgs(img_arrs, folder, id, augmented=False):
+    main_folder = os.path.join(temp["DB_PATH"], folder)
+    dt = datetime.now()
+    au = "AUGMENTED" if augmented else "MAIN"
+    for i, img in enumerate(img_arrs):
+        cv2.imwrite(os.path.join(main_folder, f"{au}_{i}_{id}_{dt.strftime('%m/%d/%Y')}.png"), img)
+
+
+def main_upload(mongo_client, img_paths, id, name):
+    arrs = [cv2.imread(path) for path in img_paths]
+
+    for i in range(len(arrs)):
+        if not verify_image(arrs[i]):
+            del arrs[i]
+
+        arrs[i] = resize_img(arrs[i])
+
+
+    augs = augment_img(arrs)
+
+    folder_name = f"{name}_{id}_{hash_id_name(id, name)}"
+
+
+    save_imgs(arrs, folder_name, id)
+    save_imgs(augs, folder_name, id, augmented=True)
+
+    return insert_to_db(mongo_client, id, name, os.path.join(temp["DB_PATH"], folder_name))
