@@ -67,7 +67,7 @@ def insert_to_db(mongo_client, id, name, db_path):
 
     update_query = { "reco_id": id }
 
-    if col.find_one(update_query):        
+    if len(col.find_one(update_query)) >= 1:        
         newvalues = { "$set": { "person_name": name, "db_path": db_path } }
         
         col.update_one(update_query, newvalues)
