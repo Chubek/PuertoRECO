@@ -9,8 +9,11 @@ def handle_multiple(img_path):
     img = cv2.imread(img_path)
     detection = detector.detect_faces(img)
 
+    if len(detection) == 0:
+        return "No Images"
+
     if len(detection) == 1:
-        return False
+        return []
 
     save_path = img_path.split("/")[-2]
     img_name = img_path.split("/")[-1].split(".")[-2]
