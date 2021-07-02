@@ -90,7 +90,7 @@ def save_imgs(img_arrs, folder, id, augmented=False):
         cv2.imwrite(os.path.join(main_folder, f"{au}_{i}_{id}_{dt.strftime('%m/%d/%Y')}.png"), img)
 
 
-def main_upload(mongo_client, img_paths, id, name):
+def main_upload(mongo_client, img_paths, id, name, delete_pickle):
     arrs = [cv2.imread(path) for path in img_paths]
 
     for i in range(len(arrs)):
@@ -110,5 +110,8 @@ def main_upload(mongo_client, img_paths, id, name):
 
     save_imgs(arrs, folder_name, id)
     save_imgs(augs, folder_name, id, augmented=True)
+
+    if delete_pickle:
+        os.remove(temp['PICKLE_PATH'])
 
     return insert_to_db(mongo_client, id, name, os.path.join(temp["DB_PATH"], folder_name))

@@ -14,6 +14,9 @@ def search_db(imgs):
         argmins.append(df[temp["SELECTED_MODEL_COL"]].argmin())
 
 
+    if len(argmins) == 0:
+        return False
+
     names_ids = [(f.split("_")[0], f.split("_")[1]) for f in argmins]
 
     return names_ids

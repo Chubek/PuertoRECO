@@ -1,6 +1,7 @@
 from deepface import DeepFace
 import glob
 from dotenv import dotenv_values
+import pymongo
 
 temp = dotenv_values(".env")
 
@@ -8,7 +9,7 @@ def verify_face(mongo_client, id, img_paths):
     row = mongo_client.find_one({"reco_id": id})
 
     if len(row) < 1:
-        return False, 300
+        return False, "No such ID"
 
     images = glob.glob(f"{row[0]['db_path']}/*.png")
 
@@ -23,7 +24,7 @@ def verify_face(mongo_client, id, img_paths):
 
     for res in results:
         if res["verified"]:
-            return True, 200
+            return True, "Verified"
             break
         else:
-            return False, 400
+            return False, "Unverified"
