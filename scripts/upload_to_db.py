@@ -16,10 +16,13 @@ def verify_image(img_arr):
 
     detection = detector.detect_faces(img_arr)
 
-    if len(detection) == 0:
+    if len(detection) == 0 or len(detection) > 1:
         return False
 
-    return True
+    bb = detection['box']
+    face = img_arr[bb[1]:bb[1] + bb[3], bb[0]:bb[0] + bb[2]]
+
+    return face
 
 def resize_img(img_arr):
     width, height = int(temp["TARGET_WIDTH"]), int(temp["TARGET_WIDTH"])
@@ -91,8 +94,11 @@ def main_upload(mongo_client, img_paths, id, name):
     arrs = [cv2.imread(path) for path in img_paths]
 
     for i in range(len(arrs)):
-        if not verify_image(arrs[i]):
+        img_det = verify_image(arrs[i])
+        if not img_det:
             del arrs[i]
+        else:
+            arrs[i] = img_det
 
         arrs[i] = resize_img(arrs[i])
 
