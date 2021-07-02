@@ -75,11 +75,11 @@ def insert_to_db(mongo_client, id, name, db_path):
         
         col.update_one(update_query, newvalues)
 
-        return None, "Updated"
+        return None, 900
     
     x = col.insert_one(insert_dict)
 
-    return x, "Inserted"
+    return x, 800
 
 
 def save_imgs(img_arrs, folder, id, augmented=False):
@@ -93,10 +93,15 @@ def save_imgs(img_arrs, folder, id, augmented=False):
 def main_upload(mongo_client, img_paths, id, name, delete_pickle):
     arrs = [cv2.imread(path) for path in img_paths]
 
+    deleted = 0
     for i in range(len(arrs)):
         img_det = verify_image(arrs[i])
         if not img_det:
             del arrs[i]
+            deleted += 1
+
+            if deleted == len(img_paths):
+                return False, 150
         else:
             arrs[i] = img_det
 

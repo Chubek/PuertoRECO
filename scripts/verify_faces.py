@@ -9,7 +9,7 @@ def verify_face(mongo_client, id, img_paths):
     row = mongo_client.find_one({"reco_id": id})
 
     if len(row) < 1:
-        return False, "No such ID"
+        return False, 400
 
     images = glob.glob(f"{row[0]['db_path']}/*.png")
 
@@ -24,7 +24,7 @@ def verify_face(mongo_client, id, img_paths):
 
     for res in results:
         if res["verified"]:
-            return True, "Verified"
+            return True, 200
             break
         else:
-            return False, "Unverified"
+            return False, 500

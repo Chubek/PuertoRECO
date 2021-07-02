@@ -25,8 +25,6 @@ def prepare_img(img_path):
     save_path = img_path.split("/")[-2]
     img_name = img_path.split("/")[-1].split(".")[-2]
 
-    if len(detection) == 0:
-        return "No Images"
 
     paths = crop_and_save(detection, img, save_path, img_name)  
 
