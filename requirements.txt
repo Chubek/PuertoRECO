@@ -4,3 +4,5 @@ git+https://github.com/ipazc/mtcnn.git
 pymongo
 opencv-python
 imgaug
+flask
+uwsgi
