@@ -6,14 +6,14 @@ detector = MTCNN()
 
 def crop_and_save(detection, img, save_path, img_name):
     paths = []
-    for det in detection:
+    for i, det in enumerate(detection):
         bb = det['box']
 
         face = img[bb[1]:bb[1] + bb[3], bb[0]:bb[0] + bb[2]]
 
         cv2.imwrite(os.path.join(save_path, f"{img_name}.png"), face)
 
-        paths.append(os.path.join(save_path, f"{img_name}.png"))
+        paths.append(os.path.join(save_path, f"{img_name}_{i}.png"))
 
     return paths
 
