@@ -50,8 +50,8 @@ def prepare_img(img_path):
 
     paths = crop_and_save(detection, img, save_path, img_name) 
 
-    print(f"Found {len(paths)} for {img_path}.") 
-    log_to_file(f"Found {len(paths)} for {img_path}.", "INFO")
+    print(f"Found and saved {len(paths)} for {img_path}.") 
+    log_to_file(f"Found and saved {len(paths)} for {img_path}.", "SUCCESS")
 
     return paths
 

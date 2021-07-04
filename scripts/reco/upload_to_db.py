@@ -77,7 +77,7 @@ def insert_to_db(mongo_client, id, name, db_path):
         
         col.update_one(update_query, newvalues)
 
-        return None, 900
+        return f"{id} already exists in DB, updated images.", 900
     
     x = col.insert_one(insert_dict)
 
@@ -119,24 +119,32 @@ def main_upload(mongo_client, img_paths, id, name, delete_pickle, rebuild_db):
             if deleted == len(img_paths):
                 print(f"Failed to detect face in any of the images. Aborting upload.")
                 log_to_file(f"Failed to detect face in any of the images. Aborting upload.", "ERROR")
-                return "Could not detect a face in any of the images", 150, 605, None, None
+                return "Could not detect a face in any of the images", 150, 605, None, None, None, None
         else:
             arrs[i] = img_det
         print(f"Resizing images to {temp['TARGET_WIDTH']}x{temp['TARGET_WIDTH']}")
         log_to_file(f"Resizing images to {temp['TARGET_WIDTH']}x{temp['TARGET_WIDTH']}", "INFO")
         arrs[i] = resize_img(arrs[i])
 
+        print(f"{img_paths[i]} successfully detected, cropped and resized.")
+        log_to_file(f"{img_paths[i]} successfully detected, cropped and resized.", "SUCCESS")
+
     print("Augmenting images...")
+    log_to_file("Augmenting images...", "INFO")
     augs = augment_img(arrs)
     print(f"Got {len(augs)} augmented images.")
+    log_to_file(f"Got {len(augs)} augmented images.", "INFO")
+
+
     folder_name = f"{name}-{id}"
 
     print("Saving images...")
+    log_to_file("Saving images...", "INFO")
     res_main = save_imgs(arrs, folder_name, id)
     res_aug = save_imgs(augs, folder_name, id, augmented=True)
-    print("Images saved.")
-
-    log_to_file(f"A total of {len(res_aug) + len(res_main)} images savd to {folder_name}", "INFO")
+    
+    print(f"A total of {len(res_aug) + len(res_main)} images savd to {folder_name}")
+    log_to_file(f"A total of {len(res_aug) + len(res_main)} images savd to {folder_name}", "SUCCESS")
 
     message_pickle = {"result": {"message": "You haven't set to delete any of the pickle files. This will create issues in the database.\
          Unless that was your intention, please delete the pickle files."}}
@@ -184,7 +192,15 @@ def main_upload(mongo_client, img_paths, id, name, delete_pickle, rebuild_db):
 
 
 
-
-    id_db, message = insert_to_db(mongo_client, id, name, os.path.join(temp["DB_PATH"], folder_name))
+    print("Inserting to db...")
+    log_to_file("Inserting to MONGO DB...", "INFO")
+    try:
+        id_db, message = insert_to_db(mongo_client, id, name, os.path.join(temp["DB_PATH"], folder_name))
+        print("Successfully inserted into MONGO DB...")
+        log_to_file("Successfully inserted into MONGO DB...", "SUCCESS")
+    except:
+        print("Insert into MONGO DB failed. Please check your settings.")
+        log_to_file("Insert into MONGO DB failed. Please check your settings.", "FAILURE")
+        return "Insert to MONGO DB failed. Please check your DB settings and rety.", 150, 605, None, None, None, None
 
     return id_db, message, message_pickle, rebuilt_db, res_main, res_aug
