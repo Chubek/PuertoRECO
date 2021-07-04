@@ -1,8 +1,10 @@
-deepface
 tensorflow
 git+https://github.com/ipazc/mtcnn.git
+deepface
 pymongo
 opencv-python
 imgaug
 flask
-uwsgi
+python-dotenv
+gdown
+dnspython

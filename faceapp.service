@@ -1,0 +1,13 @@
+[Unit]
+Description=uWSGI instance to serve livenessapp
+After=network.target
+
+[Service]
+User=sammy
+Group=www-data
+WorkingDirectory=/home/reco/liveness-chubak
+Environment="PATH=/home/reco/liveness-chubak/venv/bin"
+ExecStart=/home/reco/liveness-chubak/venv/bin/uwsgi --ini livenessapp.ini
+
+[Install]
+WantedBy=multi-user.target
