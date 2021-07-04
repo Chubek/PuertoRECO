@@ -21,7 +21,7 @@ dbclient = pymongo.MongoClient(temp["MONGO_URI"])
 
 
 def main_reco(img_paths, id_, test_title=None):    
-    test_str = f"Test title is {test_title}" if test_title is not None else "This is the real deal!"
+    test_str = "This is the real deal!" if not test_title else f"Test mode, test title: {test_title}"
     log_to_file(f"Starting recognition process with {len(img_paths)} images... {test_str}", "INFO")
 
     val_res, not_in_env, env_errs = validate_env(os.path.dirname(os.path.realpath(__file__)))
@@ -90,7 +90,7 @@ def main_reco(img_paths, id_, test_title=None):
 
 
 def upload_to_db(imgs_path, id_, name, delete_pickle, rebuild_db, test_title=None):
-    test_str = f"Test title is {test_title}" if test_title is not None else "This is the real deal!"
+    test_str = "This is the real deal!" if not test_title else f"Test mode, test title: {test_title}"
     log_to_file(f"Starting upload to DB for id {id_} and name {name}... {test_str}", "INFO")
     
     val_res, not_in_env, env_errs = validate_env(os.path.dirname(os.path.realpath(__file__)))

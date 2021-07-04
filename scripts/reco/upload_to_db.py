@@ -42,7 +42,7 @@ def augment_img(img_arrs):
         iaa.Sometimes(0.3, iaa.Fliplr(0.5)),  
         iaa.Sometimes(0.1, iaa.Crop(percent=(0, 0.1))),            
         iaa.Sometimes(0.5, iaa.GaussianBlur(sigma=(0, 0.5))),        
-        iaa.Sometimes(0.7, iaa.ContrastNormalization((0.75, 1.5))),         
+        iaa.Sometimes(0.7, iaa.contrast.LinearContrast((0.75, 1.5))),         
         iaa.Sometimes(0.8, iaa.AdditiveGaussianNoise(
             loc=0, scale=(0.0, 0.05 * 255), per_channel=0.5)),    
         iaa.Sometimes(0.4, iaa.Multiply((0.8, 1.2), per_channel=0.2)),
@@ -71,7 +71,10 @@ def insert_to_db(mongo_client, id, name, db_path):
 
     update_query = { "reco_id": id }
 
-    if col.find_one(update_query) is not None:        
+    if col.find_one(update_query) is not None:
+        log_to_file(f'ID {id} already exists in db {temp["MONGO_DB"]} and collection {temp["MONGO_COLL"]}. \
+            Images will be updated/added.', "INFO")
+
         newvalues = { "$set": { "person_name": name, "db_path": db_path } }
         
         col.update_one(update_query, newvalues)
@@ -79,6 +82,9 @@ def insert_to_db(mongo_client, id, name, db_path):
         return f"{id} already exists in DB, updated images.", 900
     
     x = col.insert_one(insert_dict)
+
+    log_to_file(f'ID {id} successfully inserted to db {temp["MONGO_DB"]} and collection {temp["MONGO_COLL"]}. \
+            The resulting MongoDB identifier is {str(x.inserted_id)}', "SUCCESS")
 
     return str(x.inserted_id), 800
 
@@ -104,25 +110,28 @@ def main_upload(mongo_client, img_paths, id, name, delete_pickle, rebuild_db):
 
     arrs = [cv2.imread(path) for path in img_paths]
 
+    deleted = 0
 
-    for i in range(len(arrs)):
-                
+    for i in range(len(arrs)):     
 
         log_to_file(f"Detecting face for {img_paths[i]}", "INFO")
-        img_det = verify_image(arrs[i])
+        img_det = verify_image(arrs[i - deleted])
         if len(img_det) == 0:
-            log_to_file(f"Failed to detect face in image {img_paths[i]} or there was more than one face... Removing.", "WARNING")
-            del arrs[i]
+            log_to_file(f"Failed to detect face in image {img_paths[i]} at\
+                 index {i} or there was more than one face... Removing and continuing.", "WARNING")
+            del arrs[i - deleted]
+            log_to_file(f"Image at index {i - deleted} removed. Length of the array is {len(arrs)}", "WARNING")
+            deleted += 1
+            if deleted == len(img_paths) or len(arrs) == 0:
+                log_to_file(f"Failed to detect face in any of the images or all contained more than one face. Aborting upload.", "ERROR")
+                return "Could not detect a face in any of the images or all contained more than one face", 150, None, None, None, None
+            continue
         else:
-            arrs[i] = img_det
-
-        if len(arrs) == 0:
-            log_to_file(f"Failed to detect face in any of the images or all contained more than one face. Aborting upload.", "ERROR")
-            return "Could not detect a face in any of the images or all contained more than one face", 150, None, None, None, None
+            arrs[i - deleted] = img_det        
 
         log_to_file(f"Resizing images to {temp['TARGET_WIDTH']}x{temp['TARGET_WIDTH']}", "INFO")
 
-        arrs[i] = resize_img(arrs[i])
+        arrs[i - deleted] = resize_img(arrs[i - deleted])
 
         log_to_file(f"{img_paths[i]} successfully detected, cropped and resized.", "SUCCESS")
 

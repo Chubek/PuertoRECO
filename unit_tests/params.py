@@ -1,3 +1,12 @@
+import os
+import sys
+import inspect
+import random
+
+currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+parentdir = os.path.dirname(currentdir)
+sys.path.insert(0, parentdir) 
+
 DB_IMGS = [r'I:\face_reco\test_imgs\chubak\chubak_1.png', r'I:\face_reco\test_imgs\chubak\chubak_2.png', r'I:\face_reco\test_imgs\chubak\chubak_3.png']
 DB_NON_EXISTENT_MIX = [r'I:\face_reco\test_imgs\chubak\babasghoui.png', r'I:\face_reco\test_imgs\chubak\chubak_1.png']
 TEST_IMGS = [r'I:\face_reco\test_imgs\chubak_test\chubak_test_2.png', r'I:\face_reco\test_imgs\chubak_test\chubak_test_3.png', \
@@ -6,7 +15,7 @@ MULTI_IMG_DB = [r'I:\face_reco\test_imgs\mamad_ammeymaryam.png', r'I:\face_reco\
 MULTI_IMG_TEST = [r'I:\face_reco\test_imgs\chubak_test\multi_face.png']
 IMG_NOT_IN_DB = [r'I:\face_reco\test_imgs\audrey\audrey_2.png']
 HARD_TO_VERIFY = [r'I:\face_reco\test_imgs\chubak_test\harrd_to_verify.png']
-ID = "ID_001"
+ID = f"ID_00{random.randint(200, 2500)}"
 NAME = "chubak"
 
 INVALID_ENV = """

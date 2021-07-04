@@ -1,10 +1,10 @@
+from params import *
 from main import *
 import unittest
 import os
 from scripts.utils.log_to_file import open_log_file, close_log_file
 from dotenv import dotenv_values
 from shutil import rmtree
-from unit_tests.params import *
 
 temp = dotenv_values(".env")
 

@@ -1,15 +1,15 @@
-from main import *
+from params import *
 import unittest
 import os
 from scripts.utils.log_to_file import open_log_file, close_log_file
 from dotenv import dotenv_values
 from shutil import rmtree
-from unit_tests.params import *
+from main import *
 
 temp = dotenv_values(".env")
 
 class TestUpload(unittest.TestCase):
-    def test_normal_upload(self):
+    def test_aa_normal_upload(self):
         """
         Test normal upload.
         """
@@ -17,6 +17,7 @@ class TestUpload(unittest.TestCase):
 
         if os.path.exists(folder_path):
             rmtree(folder_path, ignore_errors=True)
+            log_to_file(f"Deleted folder {folder_path} for testing.", "INFO")
 
 
         result, message, message_pickle, rebuilt_db, res_main, res_aug = upload_to_db(DB_IMGS, ID, NAME, True, True, test_title="test_normal_upload")
@@ -30,7 +31,7 @@ class TestUpload(unittest.TestCase):
         self.assertIn('result', message_pickle)
         self.assertIn('result', rebuilt_db)
 
-    def test_additional_upload(self):
+    def test_bb_additional_upload(self):
         """
         Test additional upload.
         """
@@ -49,7 +50,7 @@ class TestUpload(unittest.TestCase):
          Unless that was your intention, please delete the pickle files.")
         self.assertEqual(rebuilt_db['result']['message'], "You have disabled delete_pickle so rebuild_db need not be enabled.")
 
-    def test_multi_face_upload(self):
+    def test_cc_multi_face_upload(self):
         """
         Test multi-face upload.
         """
@@ -62,7 +63,7 @@ class TestUpload(unittest.TestCase):
         self.assertIsNone(res_main)
         self.assertIsNone(res_aug)
 
-    def test_no_file(self):
+    def test_dd_no_file(self):
         """
         Test none-existent file.
         """
@@ -75,11 +76,11 @@ class TestUpload(unittest.TestCase):
         self.assertIsNone(res_main)
         self.assertIsNone(res_aug)
 
-    def test_empty_list(self):
+    def test_ee_empty_list(self):
         """
         Test empty list.
         """
-        result, message, message_pickle, rebuilt_db, res_main, res_aug = upload_to_db([], ID, NAME, False, False)
+        result, message, message_pickle, rebuilt_db, res_main, res_aug = upload_to_db([], ID, NAME, False, False, test_title="test_empty_list")
 
         self.assertEqual(message, 981)
         self.assertEqual("Length of imgs list was 0", result)
