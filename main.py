@@ -20,10 +20,11 @@ dbclient = pymongo.MongoClient(temp["MONGO_URI"])
 
 
 
-def main_reco(img_paths, id_):
-    log_to_file(f"Starting recognition process with {len(img_paths)} images...", "INFO")
+def main_reco(img_paths, id_, test_title=None):    
+    test_str = f"Test title is {test_title}" if test_title is not None else "This is the real deal!"
+    log_to_file(f"Starting recognition process with {len(img_paths)} images... {test_str}", "INFO")
 
-    val_res, not_in_env, env_errs = validate_env()
+    val_res, not_in_env, env_errs = validate_env(os.path.dirname(os.path.realpath(__file__)))
 
     if not val_res:        
         return [not_in_env, env_errs], 128
@@ -88,10 +89,11 @@ def main_reco(img_paths, id_):
                 return 442, None
 
 
-def upload_to_db(imgs_path, id_, name, delete_pickle, rebuild_db):
-    log_to_file(f"Starting upload to DB for id {id_} and name {name}", "INFO")
+def upload_to_db(imgs_path, id_, name, delete_pickle, rebuild_db, test_title=None):
+    test_str = f"Test title is {test_title}" if test_title is not None else "This is the real deal!"
+    log_to_file(f"Starting upload to DB for id {id_} and name {name}... {test_str}", "INFO")
     
-    val_res, not_in_env, env_errs = validate_env()
+    val_res, not_in_env, env_errs = validate_env(os.path.dirname(os.path.realpath(__file__)))
 
     if not val_res:        
         return [not_in_env, env_errs], 128, None, None, None, None
@@ -100,12 +102,12 @@ def upload_to_db(imgs_path, id_, name, delete_pickle, rebuild_db):
     for img in imgs_path:
         if not os.path.exists(img):
             log_to_file(f"File {img} doesn't exist.", "FAILURE")
-            return f"File {img} doesn't exist.", None, None, None, None, None
+            return f"File {img} doesn't exist.", 987, None, None, None, None
 
     
     if len(imgs_path) == 0:
         log_to_file("Length of the given images array was 0.", "FAILURE")
-        return "Length of imgs list was 0", None, None, None, None, None
+        return "Length of imgs list was 0", 981, None, None, None, None
     
     result, message, message_pickle, rebuilt_db, res_main, res_aug = main_upload(dbclient, imgs_path, id_, name, delete_pickle, rebuild_db)
 

@@ -139,3 +139,5 @@ cython_debug/
 db/
 test_imgs/
 bin/
+temp_
+.env_

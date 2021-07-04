@@ -19,7 +19,7 @@ regex_url = re.compile(
 
 def validate_env(script_root):
     if not os.path.exists(os.path.join(script_root, ".env")):
-        return False, [".env file doesn't exist, aborting..."], [".env file doesn't exist, aborting..."]
+        return False, ["Error reading .env: file doesn't exist."], ["Error reading .env: file doesn't exist."]
 
     temp = dotenv_values(".env")
 
@@ -43,6 +43,14 @@ def validate_env(script_root):
     else:
         log_to_file("MODEL_PATH is not in .env", "ERROR")
         not_in_env.append("MODEL_PATH")
+
+    if 'MODEL_NAME' in temp:
+        if temp['MODEL_NAME'] == "" or not re.match(r"([\w\W\w]+).h5", temp['MODEL_NAME']):
+            log_to_file("Env file configured incorrectly: MODEL_NAME not set or does not match pattern.", "ERROR")
+            env_errs.append("Env file configured incorrectly: MODEL_NAME not set or does not match pattern.")
+    else:
+        log_to_file("MODEL_NAME is not in .env", "ERROR")
+        not_in_env.append("MODEL_NAME")
     
     if 'SELECTED_MODELS' in temp:
         if temp['SELECTED_MODELS'] == "" or not re.match(regex_models, temp['SELECTED_MODELS']):
@@ -127,6 +135,10 @@ def validate_env(script_root):
         if temp['MONGO_URI'] == '':
             log_to_file("Env file configured incorrectly: MONGO_URI is empty.", "ERROR")
             env_errs.append("Env file configured incorrectly: MONGO_URI is empty.")
+    else:
+        log_to_file("MONGO_URI is not in .env", "ERROR")
+        not_in_env.append("MONGO_URI")
+
 
     if 'ID_REGEX' in temp:
         if temp['ID_REGEX'] == '':
@@ -134,7 +146,7 @@ def validate_env(script_root):
             env_errs.append("Env file configured incorrectly: ID_REGEX is empty.")
 
         try:
-            re.compile(temp['ID_REGEX'])
+            re.compile(rf"{temp['ID_REGEX']}")
         except:
             log_to_file("Env file configured incorrectly: ID_REGEX is not a valid pattern.", "ERROR")
             env_errs.append("Env file configured incorrectly: ID_REGEX is not a valid pattern.")

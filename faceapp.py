@@ -42,7 +42,7 @@ def verify():
 def upload_verify():
     id_ = request.args['id']
 
-    if not re.match(r"{temp['ID_REGEX']}", id_):
+    if not re.match(rf"{temp['ID_REGEX']}", id_):
         return jsonify({"upload_id": None, "message": "ID doesn't match pattern."})
 
     files = request.files

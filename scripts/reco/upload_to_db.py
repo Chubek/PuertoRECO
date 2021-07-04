@@ -1,4 +1,5 @@
 from dotenv import dotenv_values
+from numpy.lib.npyio import save
 import pymongo 
 from mtcnn import MTCNN
 import cv2
@@ -17,11 +18,9 @@ import platform
 import glob
 
 temp = dotenv_values(".env")
-
+detector = MTCNN()
 
 def verify_image(img_arr):
-    detector = MTCNN()
-
     detection = detector.detect_faces(img_arr)
 
     if len(detection) == 0 or len(detection) > 1:
@@ -81,7 +80,7 @@ def insert_to_db(mongo_client, id, name, db_path):
     
     x = col.insert_one(insert_dict)
 
-    return x.inserted_id, 800
+    return str(x.inserted_id), 800
 
 
 def save_imgs(img_arrs, folder, id, augmented=False):
@@ -92,8 +91,10 @@ def save_imgs(img_arrs, folder, id, augmented=False):
     au = "AUGMENTED" if augmented else "MAIN"
     saved_res = []
     for i, img in enumerate(img_arrs):
-        cv2.imwrite(os.path.join(main_folder, f"{au}_{i}_{id}_{dt.strftime('%m%d%Y')}.png"), img)
-        saved_res.append(os.path.join(main_folder, f"{au}_{i}_{id}_{dt.strftime('%m%d%Y')}.png"))
+        save_path = os.path.join(main_folder, f"{au}_{i}_{id}_{dt.strftime('%m%d%Y')}.png")
+        cv2.imwrite(save_path, img)
+        log_to_file(f"{save_path} saved to file.", "INFO")
+        saved_res.append(save_path)
 
     return saved_res
 
@@ -103,21 +104,21 @@ def main_upload(mongo_client, img_paths, id, name, delete_pickle, rebuild_db):
 
     arrs = [cv2.imread(path) for path in img_paths]
 
-    deleted = 0
 
     for i in range(len(arrs)):
+                
+
         log_to_file(f"Detecting face for {img_paths[i]}", "INFO")
         img_det = verify_image(arrs[i])
         if len(img_det) == 0:
-            log_to_file(f"Failed to detect face in image {img_paths[i]}... Removing.", "WARNING")
+            log_to_file(f"Failed to detect face in image {img_paths[i]} or there was more than one face... Removing.", "WARNING")
             del arrs[i]
-            deleted += 1
-
-            if deleted == len(img_paths):
-                log_to_file(f"Failed to detect face in any of the images. Aborting upload.", "ERROR")
-                return "Could not detect a face in any of the images", 150, 605, None, None, None, None
         else:
             arrs[i] = img_det
+
+        if len(arrs) == 0:
+            log_to_file(f"Failed to detect face in any of the images or all contained more than one face. Aborting upload.", "ERROR")
+            return "Could not detect a face in any of the images or all contained more than one face", 150, None, None, None, None
 
         log_to_file(f"Resizing images to {temp['TARGET_WIDTH']}x{temp['TARGET_WIDTH']}", "INFO")
 
@@ -181,12 +182,12 @@ def main_upload(mongo_client, img_paths, id, name, delete_pickle, rebuild_db):
 
 
 
-    log_to_file("Inserting to MONGO DB...", "INFO")
+    log_to_file("Inserting to MONGODB...", "INFO")
     try:
         id_db, message = insert_to_db(mongo_client, id, name, os.path.join(temp["DB_PATH"], folder_name))
-        log_to_file("Successfully inserted into MONGO DB...", "SUCCESS")
+        log_to_file("Successfully inserted into MONGODB...", "SUCCESS")
     except:
-        log_to_file("Insert into MONGO DB failed. Please check your settings.", "FAILURE")
-        return "Insert to MONGO DB failed. Please check your DB settings and rety.", 150, 605, None, None, None, None
+        log_to_file("Insert into MONGODB failed. Please check your settings.", "FAILURE")
+        return "Insert to MONGODB failed. Please check your DB settings and rety.", 150, 605, None, None, None
 
     return id_db, message, message_pickle, rebuilt_db, res_main, res_aug

@@ -17,7 +17,7 @@ def verify_face(mongo_client, id_, img_paths):
         coll= db[temp["MONGO_COLL"]]
         row = coll.find_one({"reco_id": id_})
     except:
-        log_to_file("Problem getting ID, please check MONGO DB settings.", "ERROR")
+        log_to_file("Problem getting ID, please check MONGODB settings.", "ERROR")
         False, 116
 
     name = str(Path(row['db_path']).parts[-1]).split("-")[0]
