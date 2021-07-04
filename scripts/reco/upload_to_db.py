@@ -99,7 +99,6 @@ def save_imgs(img_arrs, folder, id, augmented=False):
 
 
 def main_upload(mongo_client, img_paths, id, name, delete_pickle, rebuild_db):
-    print(f"Upload to db initiated with {len(img_paths)} images.")
     log_to_file(f"Upload to db initiated with {len(img_paths)} images.", "INFO")
 
     arrs = [cv2.imread(path) for path in img_paths]
@@ -107,43 +106,36 @@ def main_upload(mongo_client, img_paths, id, name, delete_pickle, rebuild_db):
     deleted = 0
 
     for i in range(len(arrs)):
-        print(f"Detecting face for {img_paths[i]}")
         log_to_file(f"Detecting face for {img_paths[i]}", "INFO")
         img_det = verify_image(arrs[i])
         if len(img_det) == 0:
-            print(f"Failed to detect face in image {img_paths[i]}... Removing.")
             log_to_file(f"Failed to detect face in image {img_paths[i]}... Removing.", "WARNING")
             del arrs[i]
             deleted += 1
 
             if deleted == len(img_paths):
-                print(f"Failed to detect face in any of the images. Aborting upload.")
                 log_to_file(f"Failed to detect face in any of the images. Aborting upload.", "ERROR")
                 return "Could not detect a face in any of the images", 150, 605, None, None, None, None
         else:
             arrs[i] = img_det
-        print(f"Resizing images to {temp['TARGET_WIDTH']}x{temp['TARGET_WIDTH']}")
+
         log_to_file(f"Resizing images to {temp['TARGET_WIDTH']}x{temp['TARGET_WIDTH']}", "INFO")
+
         arrs[i] = resize_img(arrs[i])
 
-        print(f"{img_paths[i]} successfully detected, cropped and resized.")
         log_to_file(f"{img_paths[i]} successfully detected, cropped and resized.", "SUCCESS")
 
-    print("Augmenting images...")
     log_to_file("Augmenting images...", "INFO")
     augs = augment_img(arrs)
-    print(f"Got {len(augs)} augmented images.")
     log_to_file(f"Got {len(augs)} augmented images.", "INFO")
 
 
     folder_name = f"{name}-{id}"
 
-    print("Saving images...")
     log_to_file("Saving images...", "INFO")
     res_main = save_imgs(arrs, folder_name, id)
     res_aug = save_imgs(augs, folder_name, id, augmented=True)
     
-    print(f"A total of {len(res_aug) + len(res_main)} images savd to {folder_name}")
     log_to_file(f"A total of {len(res_aug) + len(res_main)} images savd to {folder_name}", "SUCCESS")
 
     message_pickle = {"result": {"message": "You haven't set to delete any of the pickle files. This will create issues in the database.\
@@ -151,7 +143,7 @@ def main_upload(mongo_client, img_paths, id, name, delete_pickle, rebuild_db):
     
     rebuilt_db = {"result": {"message": "You have disabled delete_pickle so rebuild_db need not be enabled."}}
 
-    print("Deleting pickle files...")
+    log_to_file("Deleting pickle files...", "INFO")
     if delete_pickle:
         message_pickle = {"result": {"message": "delete_pickle enabled."}}
 
@@ -160,14 +152,12 @@ def main_upload(mongo_client, img_paths, id, name, delete_pickle, rebuild_db):
         if platform.system() == 'Windows':
             pickle_files = glob.glob(temp['DB_PATH'] + r'\*.pkl')
 
-        print(f"Following pickle files were found: {pickle_files}")
         log_to_file(f"Following pickle files were found: {pickle_files}", "INFO")
 
         for pickle_file in pickle_files:
             pickle_file_name = Path(pickle_file).stem + ".pkl"
             if os.path.exists(pickle_file):
                 os.remove(pickle_file)
-                print(f"{pickle_file} removed.")
                 log_to_file(f"{pickle_file} removed.", "INFO")
                 message_pickle['result'][pickle_file_name] = 670
             else:
@@ -176,7 +166,7 @@ def main_upload(mongo_client, img_paths, id, name, delete_pickle, rebuild_db):
         rebuilt_db = {"result": {"message:": "You have enabled delete_pickle, but you haven't enabled rebuild_db.\
              This will lead to slower operation in the next verify session."}}
 
-        print(f"Rebuild db set to {rebuild_db}")
+        log_to_file(f"Rebuild db set to {rebuild_db}", "INFO")
         if rebuild_db:
             rebuilt_db = {"result": {'message': 'rebuild_db enabled.'}}
             script_folder = os.path.dirname(os.path.realpath(__file__))
@@ -186,20 +176,16 @@ def main_upload(mongo_client, img_paths, id, name, delete_pickle, rebuild_db):
                      model_name = model_name, enforce_detection=False)
 
                 rebuilt_db['result'][model_name] = 167
-                print(f"DB for {model_name} rebuilt.")
                 log_to_file(f"DB for {model_name} rebuilt.", "INFO")
 
 
 
 
-    print("Inserting to db...")
     log_to_file("Inserting to MONGO DB...", "INFO")
     try:
         id_db, message = insert_to_db(mongo_client, id, name, os.path.join(temp["DB_PATH"], folder_name))
-        print("Successfully inserted into MONGO DB...")
         log_to_file("Successfully inserted into MONGO DB...", "SUCCESS")
     except:
-        print("Insert into MONGO DB failed. Please check your settings.")
         log_to_file("Insert into MONGO DB failed. Please check your settings.", "FAILURE")
         return "Insert to MONGO DB failed. Please check your DB settings and rety.", 150, 605, None, None, None, None
 

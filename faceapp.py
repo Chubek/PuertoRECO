@@ -32,7 +32,6 @@ def verify():
     else: 
         imgs = glob.glob(f"{folder_path}/*.[pj][np]*")
 
-    print("Imgs found: " + imgs)
 
     result = main_reco(imgs, id)
 

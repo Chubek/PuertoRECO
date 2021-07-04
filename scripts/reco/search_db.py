@@ -9,7 +9,6 @@ from pathlib import Path
 temp = dotenv_values(".env")
 
 def search_db(imgs):
-    print("Search DB starting...")
     log_to_file("Search in DB starting...", "INFO")
     argmins = []
 
@@ -25,11 +24,11 @@ def search_db(imgs):
 
 
     if len(argmins) == 0:
-        return False
+        return []
 
     names_ids = [(str(Path(f).parts[-2]).split("-")[0], str(Path(f).parts[-2]).split("-")[1]) for f in argmins]
-    print(f"Search in DB done. {len(names_ids)} names and IDs found.")
     log_to_file(f"Search in DB done. {len(names_ids)} names and IDs found.", "SUCCESS")
+    
     return names_ids
 
 

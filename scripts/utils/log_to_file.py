@@ -15,6 +15,7 @@ def open_log_file():
     log_file.write(f"<----- Session opened at {date_str} by {getpass.getuser()} ----->\n")
 
 def log_to_file(message, type_message):
+    print(f"{type_message} --- {message}")
     global log_file
     date = datetime.datetime.now()
     date_str = date.strftime("%b %d %Y %H:%M:%S")
