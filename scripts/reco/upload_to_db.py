@@ -12,7 +12,9 @@ import random
 from deepface import DeepFace
 import functools
 import operator
-import log_to_file
+from scripts.utils.log_to_file import log_to_file
+import platform
+import glob
 
 temp = dotenv_values(".env")
 
@@ -38,24 +40,17 @@ def resize_img(img_arr):
 def augment_img(img_arrs):
     seq = iaa.Sequential(
     [
-        iaa.Fliplr(0.5),  
-        iaa.Crop(percent=(0, 0.1)),            
+        iaa.Sometimes(0.3, iaa.Fliplr(0.5)),  
+        iaa.Sometimes(0.1, iaa.Crop(percent=(0, 0.1))),            
         iaa.Sometimes(0.5, iaa.GaussianBlur(sigma=(0, 0.5))),        
-        iaa.ContrastNormalization((0.75, 1.5)),         
-        iaa.AdditiveGaussianNoise(
-            loc=0, scale=(0.0, 0.05 * 255), per_channel=0.5),    
-        iaa.Multiply((0.8, 1.2), per_channel=0.2),
-        iaa.Affine(
-            scale={
-                "x": (0.8, 1.2),
-                "y": (0.8, 1.2)
-            },
-            translate_percent={
-                "x": (-0.2, 0.2),
-                "y": (-0.2, 0.2)
-            },
-            rotate=(-25, 25),
-            shear=(-8, 8))
+        iaa.Sometimes(0.7, iaa.ContrastNormalization((0.75, 1.5))),         
+        iaa.Sometimes(0.8, iaa.AdditiveGaussianNoise(
+            loc=0, scale=(0.0, 0.05 * 255), per_channel=0.5)),    
+        iaa.Sometimes(0.4, iaa.Multiply((0.8, 1.2), per_channel=0.2)),
+        iaa.Sometimes(0.2, iaa.imgcorruptlike.Fog(severity=2)),
+        iaa.Sometimes(0.6, iaa.imgcorruptlike.Saturate(severity=2)),
+        iaa.Sometimes(0.1, iaa.imgcorruptlike.Pixelate(severity=2)), 
+        iaa.Sometimes(0.5, iaa.MultiplyAndAddToBrightness(mul=(0.5, 1.5), add=(-30, 30)))
     ],
     random_order=True)  # apply augmenters in random order
     
@@ -97,7 +92,6 @@ def save_imgs(img_arrs, folder, id, augmented=False):
     au = "AUGMENTED" if augmented else "MAIN"
     saved_res = []
     for i, img in enumerate(img_arrs):
-        cv2.imwrite(au + ".png", img)
         cv2.imwrite(os.path.join(main_folder, f"{au}_{i}_{id}_{dt.strftime('%m%d%Y')}.png"), img)
         saved_res.append(os.path.join(main_folder, f"{au}_{i}_{id}_{dt.strftime('%m%d%Y')}.png"))
 
@@ -106,7 +100,7 @@ def save_imgs(img_arrs, folder, id, augmented=False):
 
 def main_upload(mongo_client, img_paths, id, name, delete_pickle, rebuild_db):
     print(f"Upload to db initiated with {len(img_paths)} images.")
-    log_to_file(f"Upload to db initiated with {len(img_paths)} images.", "Info")
+    log_to_file(f"Upload to db initiated with {len(img_paths)} images.", "INFO")
 
     arrs = [cv2.imread(path) for path in img_paths]
 
@@ -114,21 +108,22 @@ def main_upload(mongo_client, img_paths, id, name, delete_pickle, rebuild_db):
 
     for i in range(len(arrs)):
         print(f"Detecting face for {img_paths[i]}")
-        log_to_file(f"Detecting face for {img_paths[i]}", "Info")
+        log_to_file(f"Detecting face for {img_paths[i]}", "INFO")
         img_det = verify_image(arrs[i])
         if len(img_det) == 0:
             print(f"Failed to detect face in image {img_paths[i]}... Removing.")
-            log_to_file(f"Failed to detect face in image {img_paths[i]}... Removing.", "Warning")
+            log_to_file(f"Failed to detect face in image {img_paths[i]}... Removing.", "WARNING")
             del arrs[i]
             deleted += 1
 
             if deleted == len(img_paths):
                 print(f"Failed to detect face in any of the images. Aborting upload.")
-                log_to_file(f"Failed to detect face in any of the images. Aborting upload.", "Error")
+                log_to_file(f"Failed to detect face in any of the images. Aborting upload.", "ERROR")
                 return "Could not detect a face in any of the images", 150, 605, None, None
         else:
             arrs[i] = img_det
-        print("Resizing images to {temp['TARGET_WIDTH']}x{temp['TARGET_WIDTH']}")
+        print(f"Resizing images to {temp['TARGET_WIDTH']}x{temp['TARGET_WIDTH']}")
+        log_to_file(f"Resizing images to {temp['TARGET_WIDTH']}x{temp['TARGET_WIDTH']}", "INFO")
         arrs[i] = resize_img(arrs[i])
 
     print("Augmenting images...")
@@ -141,7 +136,7 @@ def main_upload(mongo_client, img_paths, id, name, delete_pickle, rebuild_db):
     res_aug = save_imgs(augs, folder_name, id, augmented=True)
     print("Images saved.")
 
-    log_to_file(f"A total of {len(res_aug) + len(res_main)} images savd to {folder_name}")
+    log_to_file(f"A total of {len(res_aug) + len(res_main)} images savd to {folder_name}", "INFO")
 
     message_pickle = {"result": {"message": "You haven't set to delete any of the pickle files. This will create issues in the database.\
          Unless that was your intention, please delete the pickle files."}}
@@ -152,11 +147,20 @@ def main_upload(mongo_client, img_paths, id, name, delete_pickle, rebuild_db):
     if delete_pickle:
         message_pickle = {"result": {"message": "delete_pickle enabled."}}
 
-        for pickle_file in (temp['PICKLE_PATH_1'], temp['PICKLE_PATH_2'], temp['PICKLE_PATH_3']):
+        pickle_files = glob.glob(f"{temp['DB_PATH']}/*.pkl")
+
+        if platform.system() == 'Windows':
+            pickle_files = glob.glob(temp['DB_PATH'] + r'\*.pkl')
+
+        print(f"Following pickle files were found: {pickle_files}")
+        log_to_file(f"Following pickle files were found: {pickle_files}", "INFO")
+
+        for pickle_file in pickle_files:
             pickle_file_name = Path(pickle_file).stem + ".pkl"
             if os.path.exists(pickle_file):
                 os.remove(pickle_file)
                 print(f"{pickle_file} removed.")
+                log_to_file(f"{pickle_file} removed.", "INFO")
                 message_pickle['result'][pickle_file_name] = 670
             else:
                 message_pickle['result'][pickle_file_name] = 604
@@ -169,12 +173,13 @@ def main_upload(mongo_client, img_paths, id, name, delete_pickle, rebuild_db):
             rebuilt_db = {"result": {'message': 'rebuild_db enabled.'}}
             script_folder = os.path.dirname(os.path.realpath(__file__))
             random_img = random.choice(os.listdir(os.path.join(script_folder, "rebuild_db_imgs")))
-            for model_name in (temp["SELECTED_MODEL_1"], temp["SELECTED_MODEL_2"], temp["SELECTED_MODEL_3"]):        
+            for model_name in [m.strip() for m in temp['SELECTED_MODELS'].split(",")]:        
                 _ = DeepFace.find(img_path = os.path.join(script_folder, "rebuild_db_imgs", random_img), db_path = temp["DB_PATH"],\
                      model_name = model_name, enforce_detection=False)
 
                 rebuilt_db['result'][model_name] = 167
                 print(f"DB for {model_name} rebuilt.")
+                log_to_file(f"DB for {model_name} rebuilt.", "INFO")
 
 
 
