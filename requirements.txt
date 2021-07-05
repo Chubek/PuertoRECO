@@ -10,3 +10,4 @@ gdown
 dnspython
 binaryornot
 imagecorruptions
+from-root

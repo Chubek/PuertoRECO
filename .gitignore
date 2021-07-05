@@ -141,3 +141,4 @@ test_imgs/
 bin/
 temp_
 .env_
+.env_bu

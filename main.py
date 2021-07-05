@@ -1,3 +1,4 @@
+from glob import glob
 from logging import log
 from scripts.utils.log_to_file import *
 from scripts.reco.search_db import search_db
@@ -7,27 +8,38 @@ from scripts.reco.prepare_img import prepare_img
 from scripts import *
 import pymongo
 from scripts.liveness.predict_label import *
-from dotenv import dotenv_values
 import functools
 import operator
 import os
-from scripts.utils.validate_env import validate_env
-import re
-
-temp = dotenv_values(".env")
-dbclient = pymongo.MongoClient(temp["MONGO_URI"])
+from scripts.utils.validate_env import validate_env, validate_mongo_env
 
 
+mongo_uri, not_in_env, env_errs = validate_mongo_env(os.path.dirname(os.path.realpath(__file__)))
+
+if type(mongo_uri) != str:
+    dbclient = (False, not_in_env, env_errs)
+
+try:
+    log_to_file("Creating MongoDB client...", "INFO")
+    dbclient = pymongo.MongoClient(mongo_uri)
+    log_to_file("Created MongoDB client successfully.", "SUCCESS")
+except:
+    log_to_file("Error creating MongoDB client, check MONGO_URI.", "ERROR")
+    dbclient = (False, ["Error creating MongoDB client, check MONGO_URI."], ["Error creating MongoDB client, check MONGO_URI."])
 
 
 def main_reco(img_paths, id_, test_title=None):    
     test_str = "This is the real deal!" if not test_title else f"Test mode, test title: {test_title}"
     log_to_file(f"Starting recognition process with {len(img_paths)} images... {test_str}", "INFO")
 
-    val_res, not_in_env, env_errs = validate_env(os.path.dirname(os.path.realpath(__file__)))
+    if type(dbclient) == tuple:
+        _, not_in_env, env_errs = dbclient
+        return 128, [not_in_env, env_errs]
 
-    if not val_res:        
-        return [not_in_env, env_errs], 128
+    temp, not_in_env, env_errs = validate_env(os.path.dirname(os.path.realpath(__file__)))
+
+    if type(temp) != dict:        
+        return 128, [not_in_env, env_errs]
 
     for img in img_paths:
         if not os.path.exists(img):
@@ -93,9 +105,13 @@ def upload_to_db(imgs_path, id_, name, delete_pickle, rebuild_db, test_title=Non
     test_str = "This is the real deal!" if not test_title else f"Test mode, test title: {test_title}"
     log_to_file(f"Starting upload to DB for id {id_} and name {name}... {test_str}", "INFO")
     
-    val_res, not_in_env, env_errs = validate_env(os.path.dirname(os.path.realpath(__file__)))
+    if type(dbclient) == tuple:
+        _, not_in_env, env_errs = dbclient
+        return [not_in_env, env_errs], 128, None, None, None, None
 
-    if not val_res:        
+    temp, not_in_env, env_errs = validate_env(os.path.dirname(os.path.realpath(__file__)))
+
+    if type(temp) != dict:        
         return [not_in_env, env_errs], 128, None, None, None, None
 
         

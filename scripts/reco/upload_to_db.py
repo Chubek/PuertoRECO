@@ -191,12 +191,12 @@ def main_upload(mongo_client, img_paths, id, name, delete_pickle, rebuild_db):
 
 
 
-    log_to_file("Inserting to MONGODB...", "INFO")
+    log_to_file("Inserting to MongoDB...", "INFO")
     try:
         id_db, message = insert_to_db(mongo_client, id, name, os.path.join(temp["DB_PATH"], folder_name))
-        log_to_file("Successfully inserted into MONGODB...", "SUCCESS")
+        log_to_file("Successfully inserted into MongoDB...", "SUCCESS")
     except:
-        log_to_file("Insert into MONGODB failed. Please check your settings.", "FAILURE")
-        return "Insert to MONGODB failed. Please check your DB settings and rety.", 150, 605, None, None, None
+        log_to_file("Insert into MongoDB failed. Please check your settings.", "FAILURE")
+        return "Insert to MongoDB failed. Please check your DB settings and rety.", 150, 605, None, None, None
 
     return id_db, message, message_pickle, rebuilt_db, res_main, res_aug

@@ -7,6 +7,8 @@ from pathlib import Path
 from binaryornot.check import is_binary
 
 
+regex_mongo = re.compile(r"^[A-Za-z\_]+$")
+regex_password = re.compile(r"^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#\$%\^&\*])(?=.{8,})")
 list_models = ["VGG-Face", "Facenet", "OpenFace", "DeepFace", "DeepID", "ArcFace", "Dlib"]
 regex_models = re.compile(r"[A-Z][a-z]+|([A-Z][a-z]+[A-Z][a-z]+)|([A-Z]+\-[A-Z][a-z]+)|(\,)|([A-Z]+)|(\s)")
 regex_url = re.compile(
@@ -18,6 +20,9 @@ regex_url = re.compile(
         r'(?:/?|[/?]\S+)$', re.IGNORECASE)
 
 def validate_env(script_root):
+    log_to_file("Validating .env file...", "INFO")
+
+    
     if not os.path.exists(os.path.join(script_root, ".env")):
         return False, ["Error reading .env: file doesn't exist."], ["Error reading .env: file doesn't exist."]
 
@@ -26,7 +31,6 @@ def validate_env(script_root):
     env_errs = []
     not_in_env = []
 
-    log_to_file("Validating .env file...", "INFO")
 
     if 'DB_PATH' in temp:
         if temp['DB_PATH'] == "" or not os.path.isdir(temp['DB_PATH']):    
@@ -59,23 +63,9 @@ def validate_env(script_root):
 
     else:
         log_to_file("SELECTED_MODELS is not in .env", "ERROR")
-        not_in_env.append("SELECTED_MODELS")
-            
-    if 'MONGO_DB' in temp:
-        if temp['MONGO_DB'] == '' or not re.match(r"[^\W\d_]+", temp['MONGO_DB']):
-            log_to_file("Env file configured incorrectly: MONGO_DB is either empty or does not match pattern '[^\\W\\d_]+'.", "ERROR")
-            env_errs.append("Env file configured incorrectly: MONGO_DB is either empty or does not match pattern '[^\\W\\d_]+'")
-    else:
-        log_to_file("MONGO_DB is not in .env", "ERROR")
-        not_in_env.append("MONGO_DB")
-    
-    if 'MONGO_COLL' in temp:    
-        if temp['MONGO_COLL'] == '' or not re.match(r"[^\W\d_]+", temp['MONGO_COLL']):
-            log_to_file("Env file configured incorrectly: MONGO_COLL is either empty or does not match pattern '[^\\W\\d_]+'.", "ERROR")
-            env_errs.append("Env file configured incorrectly: MONGO_COLL is either empty or does not match pattern '[^\\W\\d_]+'")
-    else:
-        log_to_file("MONGO_COLL is not in .env", "ERROR")
-        not_in_env.append("MONGO_COLL")
+        not_in_env.append("SELECTED_MODELS")           
+   
+
         
     if 'MODEL_URL' in temp:
         if temp['MODEL_URL'] == '' or not re.match(regex_url, temp['MODEL_URL']):
@@ -130,29 +120,8 @@ def validate_env(script_root):
     else:
         log_to_file("LOG_LOC is not in .env", "ERROR")
         not_in_env.append("LOG_LOC")
+   
 
-    if 'MONGO_URI' in temp:
-        if temp['MONGO_URI'] == '':
-            log_to_file("Env file configured incorrectly: MONGO_URI is empty.", "ERROR")
-            env_errs.append("Env file configured incorrectly: MONGO_URI is empty.")
-    else:
-        log_to_file("MONGO_URI is not in .env", "ERROR")
-        not_in_env.append("MONGO_URI")
-
-
-    if 'ID_REGEX' in temp:
-        if temp['ID_REGEX'] == '':
-            log_to_file("Env file configured incorrectly: ID_REGEX is empty.", "ERROR")
-            env_errs.append("Env file configured incorrectly: ID_REGEX is empty.")
-
-        try:
-            re.compile(rf"{temp['ID_REGEX']}")
-        except:
-            log_to_file("Env file configured incorrectly: ID_REGEX is not a valid pattern.", "ERROR")
-            env_errs.append("Env file configured incorrectly: ID_REGEX is not a valid pattern.")
-    else:
-        log_to_file("ID_REGEX is not in .env", "ERROR")
-        not_in_env.append("ID_REGEX")
 
     if 'VER_TOL' in temp:
         if temp['VER_TOL'] == '' or not temp['VER_TOL'].isnumeric():
@@ -176,5 +145,113 @@ def validate_env(script_root):
 
     if len(not_in_env) == 0 and len(env_errs) == 0:
         return True, True, True
+
+    return False, not_in_env, env_errs
+
+def validate_id_regex(script_root):
+    log_to_file("Validating .env file and ID_REGEX...", "INFO")
+
+
+    if not os.path.exists(os.path.join(script_root, ".env")):
+        return False, ["Error reading .env: file doesn't exist."], ["Error reading .env: file doesn't exist."]
+
+    temp = dotenv_values(".env")
+
+    env_errs, not_in_env = [], []
+    
+    if 'ID_REGEX' in temp:
+        if temp['ID_REGEX'] == '':
+            log_to_file("Env file configured incorrectly: ID_REGEX is empty.", "ERROR")
+            env_errs.append("Env file configured incorrectly: ID_REGEX is empty.")
+
+        try:
+            re.compile(rf"{temp['ID_REGEX']}")
+        except:
+            log_to_file("Env file configured incorrectly: ID_REGEX is not a valid pattern.", "ERROR")
+            env_errs.append("Env file configured incorrectly: ID_REGEX is not a valid pattern.")
+    else:
+        log_to_file("ID_REGEX is not in .env", "ERROR")
+        not_in_env.append("ID_REGEX")
+
+    log_to_file(f"ID_REGEX and .env validated. {len(not_in_env)} keys not found, {len(env_errs)} errors found.", "INFO")
+
+
+    if len(not_in_env) == 0 and len(env_errs) == 0:
+        return temp, True, True
+
+    return False, not_in_env, env_errs
+
+def validate_super_pass(script_root):
+    log_to_file("Validating .env file and SUPER_PASS...", "INFO")
+
+
+    if not os.path.exists(os.path.join(script_root, ".env")):
+        return False, ["Error reading .env: file doesn't exist."], ["Error reading .env: file doesn't exist."]
+
+    temp = dotenv_values(".env")
+
+    env_errs, not_in_env = [], []
+    
+    if 'SUPER_PASS' in temp:
+        if temp['SUPER_PASS'] == '':
+            log_to_file("Env file configured incorrectly: SUPER_PASS is empty.", "ERROR")
+            env_errs.append("Env file configured incorrectly: SUPER_PASS is empty.")
+
+        if not re.match(regex_password, temp['SUPER_PASS']):
+            log_to_file("Env file configured incorrectly: SUPER_PASS is not secure.", "ERROR")
+            env_errs.append("Env file configured incorrectly: SUPER_PASS is not secure.")
+    else:
+        log_to_file("SUPER_PASS is not in .env", "ERROR")
+        not_in_env.append("SUPER_PASS")
+
+    log_to_file(f"SUPER_PASS and .env validated. {len(not_in_env)} keys not found, {len(env_errs)} errors found.", "INFO")
+
+
+    if len(not_in_env) == 0 and len(env_errs) == 0:
+        return temp['SUPER_PASS'], True, True
+
+    return False, not_in_env, env_errs
+
+def validate_mongo_env(script_root):
+    log_to_file("Validating .env file and MongoDB related keys...", "INFO")
+
+
+    if not os.path.exists(os.path.join(script_root, ".env")):
+        return False, ["Error reading .env: file doesn't exist."], ["Error reading .env: file doesn't exist."]
+
+    temp = dotenv_values(".env")
+
+    env_errs, not_in_env = [], []
+
+    if 'MONGO_URI' in temp:
+        if temp['MONGO_URI'] == '':
+            log_to_file("Env file configured incorrectly: MONGO_URI is empty.", "ERROR")
+            env_errs.append("Env file configured incorrectly: MONGO_URI is empty.")
+    else:
+        log_to_file("MONGO_URI is not in .env", "ERROR")
+        not_in_env.append("MONGO_URI")
+
+        
+    if 'MONGO_COLL' in temp:    
+        if temp['MONGO_COLL'] == '' or not re.match(regex_mongo, temp['MONGO_COLL']):
+            log_to_file("Env file configured incorrectly: MONGO_COLL is either empty or does not match pattern, it can only be letter and underscore.", "ERROR")
+            env_errs.append("Env file configured incorrectly: MONGO_COLL is either empty or does not match pattern, it can only be letter and underscore.")
+    else:
+        log_to_file("MONGO_COLL is not in .env", "ERROR")
+        not_in_env.append("MONGO_COLL")
+
+    if 'MONGO_DB' in temp:
+        if temp['MONGO_DB'] == '' or not re.match(regex_mongo, temp['MONGO_DB']):
+            log_to_file("Env file configured incorrectly: MONGO_DB is either empty or does not match pattern, it can only be letter and underscore.", "ERROR")
+            env_errs.append("Env file configured incorrectly: MONGO_DB is either empty or does not match pattern, it can only be letter and underscore.")
+    else:
+        log_to_file("MONGO_DB is not in .env", "ERROR")
+        not_in_env.append("MONGO_DB")
+
+    log_to_file(f"MongoDB keys and .env validated. {len(not_in_env)} keys not found, {len(env_errs)} errors found.", "INFO")
+
+
+    if len(not_in_env) == 0 and len(env_errs) == 0:
+        return temp['MONGO_URI'], True, True
 
     return False, not_in_env, env_errs

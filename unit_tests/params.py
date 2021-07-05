@@ -2,9 +2,14 @@ import os
 import sys
 import inspect
 import random
+from pathlib import Path
 
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 parentdir = os.path.dirname(currentdir)
+
+env_file = os.path.join(parentdir, ".env")
+env_file_renamed = os.path.join(parentdir, "temp_")
+
 sys.path.insert(0, parentdir) 
 
 DB_IMGS = [r'I:\face_reco\test_imgs\chubak\chubak_1.png', r'I:\face_reco\test_imgs\chubak\chubak_2.png', r'I:\face_reco\test_imgs\chubak\chubak_3.png']
@@ -12,11 +17,14 @@ DB_NON_EXISTENT_MIX = [r'I:\face_reco\test_imgs\chubak\babasghoui.png', r'I:\fac
 TEST_IMGS = [r'I:\face_reco\test_imgs\chubak_test\chubak_test_2.png', r'I:\face_reco\test_imgs\chubak_test\chubak_test_3.png', \
     r'I:\face_reco\test_imgs\chubak_test\chubak_test.png']
 MULTI_IMG_DB = [r'I:\face_reco\test_imgs\mamad_ammeymaryam.png', r'I:\face_reco\test_imgs\no_face.png']
+IMG_NO_FACE = [r'I:\face_reco\test_imgs\no_face.png']
 MULTI_IMG_TEST = [r'I:\face_reco\test_imgs\chubak_test\multi_face.png']
 IMG_NOT_IN_DB = [r'I:\face_reco\test_imgs\audrey\audrey_2.png']
 HARD_TO_VERIFY = [r'I:\face_reco\test_imgs\chubak_test\harrd_to_verify.png']
 ID = f"ID_00{random.randint(200, 2500)}"
+RECO_ID = "ID_002129"
 NAME = "chubak"
+IMGS_SPOOF = [r'I:\face_reco\test_imgs\spoof_1.png', r'I:\face_reco\test_imgs\spoof_2.png']
 
 INVALID_ENV = """
 MODEL_PATH=bin?model
@@ -35,4 +43,5 @@ SIM_FUNC=cosinus
 LOG_LOC=I:\\face_reco\\faceapp
 VER_TOL=28u
 VER_TOL_AUG=2u
+SUPER_PASS=badpass
 """
