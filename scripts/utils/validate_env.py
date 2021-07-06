@@ -7,7 +7,7 @@ from pathlib import Path
 from binaryornot.check import is_binary
 
 
-regex_mongo = re.compile(r"^[A-Za-z\_]+$")
+regex_mysql = re.compile(r"^[A-Za-z\_]+$")
 regex_password = re.compile(r"^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#\$%\^&\*])(?=.{8,})")
 list_models = ["VGG-Face", "Facenet", "OpenFace", "DeepFace", "DeepID", "ArcFace", "Dlib"]
 regex_models = re.compile(r"[A-Z][a-z]+|([A-Z][a-z]+[A-Z][a-z]+)|([A-Z]+\-[A-Z][a-z]+)|(\,)|([A-Z]+)|(\s)")
@@ -218,7 +218,7 @@ def validate_super_pass(script_root):
 
     return False, not_in_env, env_errs
 
-def validate_mongo_env(script_root):
+def validate_mysql_env(script_root):
     log_to_file("Validating .env file and MySQL related keys...", "INFO")
 
     env_file = os.path.join(script_root, ".env")
@@ -257,7 +257,7 @@ def validate_mongo_env(script_root):
 
         
     if 'SQL_TABLE' in temp:    
-        if temp['SQL_TABLE'] == '' or not re.match(regex_mongo, temp['SQL_TABLE']):
+        if temp['SQL_TABLE'] == '' or not re.match(regex_mysql, temp['SQL_TABLE']):
             log_to_file("Env file configured incorrectly: SQL_TABLE is either empty or does not match pattern, it can only be letter and underscore.", "ERROR")
             env_errs.append("Env file configured incorrectly: SQL_TABLE is either empty or does not match pattern, it can only be letter and underscore.")
     else:
@@ -265,7 +265,7 @@ def validate_mongo_env(script_root):
         not_in_env.append("SQL_TABLE")
 
     if 'SQL_SCHEMA' in temp:
-        if temp['SQL_SCHEMA'] == '' or not re.match(regex_mongo, temp['SQL_SCHEMA']):
+        if temp['SQL_SCHEMA'] == '' or not re.match(regex_mysql, temp['SQL_SCHEMA']):
             log_to_file("Env file configured incorrectly: SQL_SCHEMA is either empty or does not match pattern, it can only be letter and underscore.", "ERROR")
             env_errs.append("Env file configured incorrectly: SQL_SCHEMA is either empty or does not match pattern, it can only be letter and underscore.")
     else:
@@ -273,7 +273,7 @@ def validate_mongo_env(script_root):
         not_in_env.append("SQL_SCHEMA")
 
     if 'PATH_COL' in temp:
-        if temp['PATH_COL'] == '' or not re.match(regex_mongo, temp['SQL_SCHEMA']):
+        if temp['PATH_COL'] == '' or not re.match(regex_mysql, temp['SQL_SCHEMA']):
             log_to_file("Env file configured incorrectly: PATH_COL is either empty or does not match pattern, it can only be letter and underscore.", "ERROR")
             env_errs.append("Env file configured incorrectly: PATH_COL is either empty or does not match pattern, it can only be letter and underscore.")
     else:
@@ -281,7 +281,7 @@ def validate_mongo_env(script_root):
         not_in_env.append("PATH_COL")
 
     if 'NAME_COL' in temp:
-        if temp['NAME_COL'] == '' or not re.match(regex_mongo, temp['SQL_SCHEMA']):
+        if temp['NAME_COL'] == '' or not re.match(regex_mysql, temp['SQL_SCHEMA']):
             log_to_file("Env file configured incorrectly: NAME_COL is either empty or does not match pattern, it can only be letter and underscore.", "ERROR")
             env_errs.append("Env file configured incorrectly: NAME_COL is either empty or does not match pattern, it can only be letter and underscore.")
     else:
@@ -289,7 +289,7 @@ def validate_mongo_env(script_root):
         not_in_env.append("NAME_COL")
 
     if 'ID_COL' in temp:
-        if temp['ID_COL'] == '' or not re.match(regex_mongo, temp['SQL_SCHEMA']):
+        if temp['ID_COL'] == '' or not re.match(regex_mysql, temp['SQL_SCHEMA']):
             log_to_file("Env file configured incorrectly: ID_COL is either empty or does not match pattern, it can only be letter and underscore.", "ERROR")
             env_errs.append("Env file configured incorrectly: ID_COL is either empty or does not match pattern, it can only be letter and underscore.")
     else:
@@ -311,5 +311,42 @@ def validate_mongo_env(script_root):
 
     if len(not_in_env) == 0 and len(env_errs) == 0:
         return sql_uri, True, True
+
+    return False, not_in_env, env_errs
+
+
+def validate_score_tol(script_root):
+    log_to_file("Validating .env file and SCORE_TOL...", "INFO")
+
+    env_file = os.path.join(script_root, ".env")
+
+    env_errs, not_in_env = [], []
+    
+    if not os.path.exists(env_file):
+        log_to_file(f"ENV file {env_file} does not exist. Aborting...", "ERROR")
+        return False, ["Error reading .env: file doesn't exist."], ["Error reading .env: file doesn't exist."]
+
+    temp = dotenv_values(".env")
+
+    if 'SCORE_TOL' in temp:
+        if temp['SCORE_TOL'] == '' or not temp['SCORE_TOL'].isnumeric():
+            log_to_file("Env file configured incorrectly: SCORE_TOL is empty or not numeric.", "ERROR")
+            env_errs.append("Env file configured incorrectly: SCORE_TOL is empty or not numeric.")
+
+        try:
+            _ = float(temp['SCORE_TOL'])
+        except:
+            log_to_file("Env file configured incorrectly: SCORE_TOL is not float.", "ERROR")
+            env_errs.append("Env file configured incorrectly: SCORE_TOL is not float.")
+
+    else:
+        log_to_file("SCORE_TOL is not in .env", "ERROR")
+        not_in_env.append("SCORE_TOL")
+
+    log_to_file(f"MySQL keys and .env validated. {len(not_in_env)} keys not found, {len(env_errs)} errors found.", "INFO")
+
+    
+    if len(not_in_env) == 0 and len(env_errs) == 0:
+        return float(temp['SCORE_TOL']), True, True
 
     return False, not_in_env, env_errs

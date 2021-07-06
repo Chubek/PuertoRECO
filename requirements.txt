@@ -11,3 +11,4 @@ dnspython
 binaryornot
 imagecorruptions
 from-root
+image-quality
