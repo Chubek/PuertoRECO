@@ -91,13 +91,23 @@ def insert_to_db(mongo_client, id, name, db_path):
 
 def save_imgs(img_arrs, folder, id, augmented=False):
     main_folder = os.path.join(temp["DB_PATH"], folder)
-    if not os.path.exists(main_folder):
-        os.makedirs(main_folder)
+
+    face_folder = os.path.join(main_folder, "faces")
+    aug_folder = os.path.join(main_folder, "augmented_imgs")
+
     dt = datetime.now()
     au = "AUGMENTED" if augmented else "MAIN"
     saved_res = []
+
+    save_path_dir = face_folder if not augmented else aug_folder
+
+    
+    if not os.path.exists(save_path_dir):
+        os.makedirs(save_path_dir)
+        log_to_file(f"Folder {save_path_dir} created.", "SUCCESS")
+
     for i, img in enumerate(img_arrs):
-        save_path = os.path.join(main_folder, f"{au}_{i}_{id}_{dt.strftime('%m%d%Y')}.png")
+        save_path = os.path.join(save_path_dir, f"{au}_{i}_{id}_{dt.strftime('%m%d%Y')}.png")
         cv2.imwrite(save_path, img)
         log_to_file(f"{save_path} saved to file.", "INFO")
         saved_res.append(save_path)

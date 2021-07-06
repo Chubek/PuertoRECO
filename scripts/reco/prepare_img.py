@@ -9,27 +9,35 @@ detector = MTCNN()
 
 def crop_and_save(detection, img, save_path, img_name):
     paths = []
+    aug_folder = os.path.join(save_path, "augmented_imgs")
+    face_folder = os.path.join(save_path, "faces")
+
+    for ff in [aug_folder, face_folder]:
+        if not os.path.exists(ff):
+            os.makedirs(ff)
+            log_to_file(f"Folder {ff} created.", "SUCCESS")
+
     for i, det in enumerate(detection):
         bb = det['box']
 
-        log_to_file("Cropping face...")
+        log_to_file(f"Cropping face number {i + 1} out of {len(detection)} for {img_name}...", "INFO")
         face = img[bb[1]:bb[1] + bb[3], bb[0]:bb[0] + bb[2]]
         
         face = cv2.resize(face, (224, 224))
         
 
-        cv2.imwrite(os.path.join(save_path, f"{img_name}_{i}.png"), face)
-        log_to_file(f"{os.path.join(save_path, f'{img_name}_{i}.png')} saved.", "SUCCESS")
+        cv2.imwrite(os.path.join(face_folder, f"{img_name}_{i}.png"), face)
+        log_to_file(f"{os.path.join(face_folder, f'{img_name}_{i}.png')} saved.", "SUCCESS")
         
         face_augmented = augment_img([face])
         
         for j, face_aug in enumerate(face_augmented):
-            cv2.imwrite(os.path.join(save_path, f"{img_name}_{i}_{j}_AUGMENTED.png"), face_aug)            
-            log_to_file(f"{os.path.join(save_path, f'{img_name}_{i}_{j}_AUGMENTED.png')} saved.", "SUCCESS")
-            paths.append(os.path.join(save_path, f"{img_name}_{i}_{j}_AUGMENTED.png"))
+            cv2.imwrite(os.path.join(aug_folder, f"{img_name}_{i}_{j}_AUGMENTED.png"), face_aug)            
+            log_to_file(f"{os.path.join(aug_folder, f'{img_name}_{i}_{j}_AUGMENTED.png')} saved.", "SUCCESS")
+            paths.append(os.path.join(aug_folder, f"{img_name}_{i}_{j}_AUGMENTED.png"))
 
 
-        paths.append(os.path.join(save_path, f"{img_name}_{i}.png"))
+        paths.append(os.path.join(face_folder, f"{img_name}_{i}.png"))
         
 
     return paths

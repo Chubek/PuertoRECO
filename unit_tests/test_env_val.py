@@ -17,7 +17,7 @@ class TestValidateEnv(unittest.TestCase):
         
         os.rename(env_file, env_file_renamed)
 
-        res_reco, arr_reco = main_reco(DB_IMGS, ID, test_title="test_no_env")
+        res_reco, arr_reco, _ = main_reco(DB_IMGS, ID, test_title="test_no_env")
         arr_upload, res_upload, _, _, _, _ = upload_to_db(DB_IMGS, ID, NAME, True, True, test_title="test_no_env")
 
         self.assertEqual((res_reco, res_upload), (128, 128))
@@ -40,7 +40,7 @@ class TestValidateEnv(unittest.TestCase):
         Test that if keys in .env don't exist
         """       
 
-        res_reco, arr_reco = main_reco(DB_IMGS, ID, test_title="test_no_keys")
+        res_reco, arr_reco, _ = main_reco(DB_IMGS, ID, test_title="test_no_keys")
         arr_upload, res_upload, _, _, _, _ = upload_to_db(DB_IMGS, ID, NAME, True, True, test_title="test_no_env")
 
         self.assertEqual((res_reco, res_upload), (128, 128))
@@ -61,7 +61,7 @@ class TestValidateEnv(unittest.TestCase):
         Test that for errors in valid_env
         """    
 
-        res_reco, arr_reco = main_reco(DB_IMGS, ID, test_title="test_env_error")
+        res_reco, arr_reco, _ = main_reco(DB_IMGS, ID, test_title="test_env_error")
         arr_upload, res_upload, _, _, _, _ = upload_to_db(DB_IMGS, ID, NAME, True, True, test_title="test_env_errors")
 
         self.assertEqual((res_reco, res_upload), (128, 128))

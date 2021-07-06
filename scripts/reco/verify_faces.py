@@ -1,3 +1,4 @@
+from unit_tests.params import NAME
 from deepface import DeepFace
 import glob
 from dotenv import dotenv_values
@@ -10,7 +11,7 @@ from pathlib import Path
 temp = dotenv_values(".env")
 
 def verify_face(mongo_client, id_, img_paths):
-    log_to_file("Files to verify: " + str(img_paths) + " with length " + str(len(img_paths)), "INFO")
+    log_to_file(f"Verifying {len(img_paths)} images...", "INFO")
     
     try:
         db = mongo_client[temp["MONGO_DB"]]
@@ -18,59 +19,66 @@ def verify_face(mongo_client, id_, img_paths):
         row = coll.find_one({"reco_id": id_})
     except:
         log_to_file("Problem getting ID, please check MongoDB settings.", "ERROR")
-        False, 116
+        False, 116, None
 
-    name = str(Path(row['db_path']).parts[-1]).split("-")[0]
 
     if row is None:
         log_to_file("Didn't find the ID in the database.", "ERROR")
-        return False, 400
+        return False, 400, None
+        
+    name = str(Path(row['db_path']).parts[-1]).split("-")[0]
+
+    images_db_aug = glob.glob(f"{row['db_path']}/augmented_imgs/*.png")
+    images_db_normal = glob.glob(f"{row['db_path']}/faces/*.png")
 
     if platform.system() == "Windows":
-        images = glob.glob(row['db_path'] + r"\*.png")
-    else:
-        images = glob.glob(f"{row['db_path']}/*.png")
+        images_db_aug = glob.glob(row['db_path'] + r"\augmented_imgs\*.png")
+        images_db_normal = glob.glob(row['db_path'] + r"\faces\*.png")        
 
-    log_to_file("Images found in db: " + str(images) + " with length " + str(len(images)), "INFO")
+    log_to_file(f"Found {len(images_db_aug)} augmented images and {len(images_db_normal)} real images in DB.", "INFO")
 
-    images_db_aug = [img for img in images if "AUGMENTED" in img]
-    images_db_normal = [img for img in images if not "AUGMENTED" in img]
     images_paths_aug = [img for img in img_paths if "AUGMENTED" in img]
     images_paths_normal = [img for img in img_paths if not "AUGMENTED" in img]
     
-   
-    log_to_file(f"DB set split into {len(images_db_normal)} normal images and {len(images_db_aug)} augmented images.", "INFO")
-    log_to_file(f"Test set split into {len(images_paths_normal)} normal images and {len(images_paths_aug)} augmented images.", "INFO")
+    log_to_file(f"Found {len(images_paths_aug)} augmented images and {len(images_paths_normal)} real images in img_paths.", "INFO")
 
 
     verified = 0
     verified_aug = 0
 
     for model_name in [m.strip() for m in temp["SELECTED_MODELS"].split(',')]:
+        log_to_file(f"Model {model_name} selected.", "INFO")
         for img_p_n in images_paths_normal:
             for img_db_n in images_db_normal:
+                log_to_file(f"Verifying on real test image {img_p_n} and real DB image {img_db_n}", "INFO")
                 result = DeepFace.verify(img_p_n, img_db_n, model_name = model_name, enforce_detection=False)
 
                 if result['verified']:
                     verified += 1                    
-                    log_to_file(f"ID {id_} verified real image on verification image {img_p_n} and db image {img_db_n} with model {model_name} and distance of\
+                    log_to_file(f"ID {id_} verified for the {verified}th time with real image on verification image {img_p_n} and db image {img_db_n} with model {model_name} and distance of\
                          {result['distance']} and a threshold of {str(result['max_threshold_to_verify']).strip()}.", "INFO")
 
-                    if verified >= int(temp['VER_TOL']) or len(images_paths_normal):
-                        log_to_file("Real verification reached tolerance. Verifying...", "SUCCESS")
-                        return name, 200    
+                    if verified >= int(temp['VER_TOL']) or verified >= len(images_paths_normal):
+                        log_to_file(f"Real verification reached the tolerance of {temp['VER_TOL']}. Verifying...", "SUCCESS")
+                        return name, 200, result['distance']
 
-                for img_p_a in images_paths_aug:
-                    for img_db_a in images_db_aug + images_db_normal:
-                        result = DeepFace.verify(img_p_a, img_db_a, model_name = model_name, enforce_detection=False)
+        log_to_file('Failed to verify on real images, trying augmented ones...', "FAILURE")    
 
-                    if result['verified']:
-                        verified_aug += 1                        
-                        log_to_file(f"ID {id_} verified augmented image on verification image {img_p_a} and db image {img_db_a} with model {model_name} and distance of\
+        for img_p_a in images_paths_aug:
+            for img_db_a in images_db_aug + images_db_normal:
+                log_to_file(f"Verifying on augmented test image {img_p_a} and augmented/real DB image {img_db_a}", "INFO")
+                result = DeepFace.verify(img_p_a, img_db_a, model_name = model_name, enforce_detection=False)
+
+                if result['verified']:
+                    verified_aug += 1                        
+                    log_to_file(f"ID {id_} verified for the {verified_aug}th time with augmented image on verification image {img_p_a} and db image {img_db_a} with model {model_name} and distance of\
                             {result['distance']} and a threshold of {str(result['max_threshold_to_verify']).strip()}.", "INFO")
 
-                    if verified_aug >= int(temp['VER_TOL_AUG']):
-                        log_to_file("Augmentation verification reached tolerance. Verifying...", "SUCCESS")
-                        return name, 200                
+                if verified_aug >= int(temp['VER_TOL_AUG']):
+                    log_to_file(f"Augmentation verification reached the tolerance of {temp['VER_TOL_AUG']}. Verifying...", "SUCCESS")
+                    return name, 200, result['distance']
 
-    return False, 500
+        log_to_file('Failed to verify on augmented images.', "FAILURE")    
+                  
+
+    return False, 500, None
