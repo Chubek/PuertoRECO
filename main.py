@@ -15,22 +15,6 @@ from scripts.utils.validate_env import validate_env, validate_mongo_env
 
 
 
-open_log_file(session_type="mongoDB client creation")
-
-mongo_uri, not_in_env, env_errs = validate_mongo_env(os.path.dirname(os.path.realpath(__file__)))
-
-if type(mongo_uri) != str:
-    dbclient_tuple = [False, not_in_env, env_errs]
-
-try:
-    log_to_file("Creating MongoDB client...", "INFO")
-    dbclient_tuple = [pymongo.MongoClient(mongo_uri), None, None]
-    log_to_file("Created MongoDB client successfully.", "SUCCESS")
-except:
-    log_to_file("Error creating MongoDB client, check MONGO_URI.", "ERROR")
-    dbclient_tuple = [False, ["Error creating MongoDB client, check MONGO_URI."], ["Error creating MongoDB client, check MONGO_URI."]]
-
-close_log_file()
 
 def main_reco(img_paths, id_, test_title=None, skip_verify=False, skip_db_search=False):    
     test_str = "This is the real deal!" if not test_title else f"Test mode, test title: {test_title}"

@@ -18,7 +18,7 @@ def open_log_file(session_type="test"):
     print(f"<----- {sstype} session opened at {date_str} by {getpass.getuser()} ----->\n")
     log_file.write(f"<----- {sstype} session opened at {date_str} by {getpass.getuser()} ----->\n")
 
-def log_to_file(message, type_message):
+def log_to_file(message, type_message="INFO"):
     message_strp = re.sub(r"\s+", " ", message.strip().strip(r'\n'))
 
     print(f"{type_message} --- {message_strp}")

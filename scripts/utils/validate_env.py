@@ -23,7 +23,10 @@ def validate_env(script_root):
     log_to_file("Validating .env file...", "INFO")
 
     
-    if not os.path.exists(os.path.join(script_root, ".env")):
+    env_file = os.path.join(script_root, ".env")
+
+    if not os.path.exists(env_file):
+        log_to_file(f"ENV file {env_file} does not exist. Aborting...", "ERROR")
         return False, ["Error reading .env: file doesn't exist."], ["Error reading .env: file doesn't exist."]
 
     temp = dotenv_values(".env")
@@ -185,7 +188,10 @@ def validate_super_pass(script_root):
     log_to_file("Validating .env file and SUPER_PASS...", "INFO")
 
 
-    if not os.path.exists(os.path.join(script_root, ".env")):
+    env_file = os.path.join(script_root, ".env")
+
+    if not os.path.exists(env_file):
+        log_to_file(f"ENV file {env_file} does not exist. Aborting...", "ERROR")
         return False, ["Error reading .env: file doesn't exist."], ["Error reading .env: file doesn't exist."]
 
     temp = dotenv_values(".env")
@@ -213,45 +219,97 @@ def validate_super_pass(script_root):
     return False, not_in_env, env_errs
 
 def validate_mongo_env(script_root):
-    log_to_file("Validating .env file and MongoDB related keys...", "INFO")
+    log_to_file("Validating .env file and MySQL related keys...", "INFO")
 
+    env_file = os.path.join(script_root, ".env")
 
-    if not os.path.exists(os.path.join(script_root, ".env")):
+    if not os.path.exists(env_file):
+        log_to_file(f"ENV file {env_file} does not exist. Aborting...", "ERROR")
         return False, ["Error reading .env: file doesn't exist."], ["Error reading .env: file doesn't exist."]
 
     temp = dotenv_values(".env")
 
     env_errs, not_in_env = [], []
 
-    if 'MONGO_URI' in temp:
-        if temp['MONGO_URI'] == '':
-            log_to_file("Env file configured incorrectly: MONGO_URI is empty.", "ERROR")
-            env_errs.append("Env file configured incorrectly: MONGO_URI is empty.")
+    if 'SQL_URI' in temp:
+        if temp['SQL_URI'] == '':
+            log_to_file("Env file configured incorrectly: SQL_URI is empty.", "ERROR")
+            env_errs.append("Env file configured incorrectly: SQL_URI is empty.")
     else:
-        log_to_file("MONGO_URI is not in .env", "ERROR")
-        not_in_env.append("MONGO_URI")
+        log_to_file("SQL_URI is not in .env", "ERROR")
+        not_in_env.append("SQL_URI")
+
+    if 'SQL_USER' in temp:
+        if temp['SQL_USER'] == '':
+            log_to_file("Env file configured incorrectly: SQL_USER is empty.", "ERROR")
+            env_errs.append("Env file configured incorrectly: SQL_USER is empty.")
+    else:
+        log_to_file("SQL_USER is not in .env", "ERROR")
+        not_in_env.append("SQL_USER")
+
+    if 'SQL_PASS' in temp:
+        if temp['SQL_PASS'] == '':
+            log_to_file("Env file configured incorrectly: SQL_PASS is empty.", "ERROR")
+            env_errs.append("Env file configured incorrectly: SQL_PASS is empty.")
+    else:
+        log_to_file("SQL_PASS is not in .env", "ERROR")
+        not_in_env.append("SQL_PASS")
 
         
-    if 'MONGO_COLL' in temp:    
-        if temp['MONGO_COLL'] == '' or not re.match(regex_mongo, temp['MONGO_COLL']):
-            log_to_file("Env file configured incorrectly: MONGO_COLL is either empty or does not match pattern, it can only be letter and underscore.", "ERROR")
-            env_errs.append("Env file configured incorrectly: MONGO_COLL is either empty or does not match pattern, it can only be letter and underscore.")
+    if 'SQL_TABLE' in temp:    
+        if temp['SQL_TABLE'] == '' or not re.match(regex_mongo, temp['SQL_TABLE']):
+            log_to_file("Env file configured incorrectly: SQL_TABLE is either empty or does not match pattern, it can only be letter and underscore.", "ERROR")
+            env_errs.append("Env file configured incorrectly: SQL_TABLE is either empty or does not match pattern, it can only be letter and underscore.")
     else:
-        log_to_file("MONGO_COLL is not in .env", "ERROR")
-        not_in_env.append("MONGO_COLL")
+        log_to_file("SQL_TABLE is not in .env", "ERROR")
+        not_in_env.append("SQL_TABLE")
 
-    if 'MONGO_DB' in temp:
-        if temp['MONGO_DB'] == '' or not re.match(regex_mongo, temp['MONGO_DB']):
-            log_to_file("Env file configured incorrectly: MONGO_DB is either empty or does not match pattern, it can only be letter and underscore.", "ERROR")
-            env_errs.append("Env file configured incorrectly: MONGO_DB is either empty or does not match pattern, it can only be letter and underscore.")
+    if 'SQL_SCHEMA' in temp:
+        if temp['SQL_SCHEMA'] == '' or not re.match(regex_mongo, temp['SQL_SCHEMA']):
+            log_to_file("Env file configured incorrectly: SQL_SCHEMA is either empty or does not match pattern, it can only be letter and underscore.", "ERROR")
+            env_errs.append("Env file configured incorrectly: SQL_SCHEMA is either empty or does not match pattern, it can only be letter and underscore.")
     else:
-        log_to_file("MONGO_DB is not in .env", "ERROR")
-        not_in_env.append("MONGO_DB")
+        log_to_file("SQL_SCHEMA is not in .env", "ERROR")
+        not_in_env.append("SQL_SCHEMA")
 
-    log_to_file(f"MongoDB keys and .env validated. {len(not_in_env)} keys not found, {len(env_errs)} errors found.", "INFO")
+    if 'PATH_COL' in temp:
+        if temp['PATH_COL'] == '' or not re.match(regex_mongo, temp['SQL_SCHEMA']):
+            log_to_file("Env file configured incorrectly: PATH_COL is either empty or does not match pattern, it can only be letter and underscore.", "ERROR")
+            env_errs.append("Env file configured incorrectly: PATH_COL is either empty or does not match pattern, it can only be letter and underscore.")
+    else:
+        log_to_file("PATH_COL is not in .env", "ERROR")
+        not_in_env.append("PATH_COL")
 
+    if 'NAME_COL' in temp:
+        if temp['NAME_COL'] == '' or not re.match(regex_mongo, temp['SQL_SCHEMA']):
+            log_to_file("Env file configured incorrectly: NAME_COL is either empty or does not match pattern, it can only be letter and underscore.", "ERROR")
+            env_errs.append("Env file configured incorrectly: NAME_COL is either empty or does not match pattern, it can only be letter and underscore.")
+    else:
+        log_to_file("NAME_COL is not in .env", "ERROR")
+        not_in_env.append("NAME_COL")
+
+    if 'ID_COL' in temp:
+        if temp['ID_COL'] == '' or not re.match(regex_mongo, temp['SQL_SCHEMA']):
+            log_to_file("Env file configured incorrectly: ID_COL is either empty or does not match pattern, it can only be letter and underscore.", "ERROR")
+            env_errs.append("Env file configured incorrectly: ID_COL is either empty or does not match pattern, it can only be letter and underscore.")
+    else:
+        log_to_file("ID_COL is not in .env", "ERROR")
+        not_in_env.append("ID_COL")
+
+    log_to_file(f"MySQL keys and .env validated. {len(not_in_env)} keys not found, {len(env_errs)} errors found.", "INFO")
+
+    sql_uri = {
+        "SCHEMA": temp['SQL_SCHEMA'],
+        "URI": temp['SQL_URI'],
+        "PASS": temp['SQL_PASS'],
+        "USER": temp['SQL_USER'],
+        "ID_COL": temp['ID_COL'],
+        "PATH_COL": temp['PATH_COL'],
+        "NAME_COL": temp['NAME_COL'],
+        "TABLE": temp['SQL_TABLE']
+    }
 
     if len(not_in_env) == 0 and len(env_errs) == 0:
-        return temp['MONGO_URI'], True, True
+        return sql_uri, True, True
 
     return False, not_in_env, env_errs

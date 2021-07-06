@@ -16,6 +16,7 @@ import operator
 from scripts.utils.log_to_file import log_to_file
 import platform
 import glob
+from scripts.database_op.db_op import insert_to_db
 
 temp = dotenv_values(".env")
 detector = MTCNN()
@@ -63,30 +64,7 @@ def augment_img(img_arrs):
 def hash_id_name(id, name):
     return hash(f"{id}_{name}")
 
-def insert_to_db(mongo_client, id, name, db_path):
-    db = mongo_client[temp["MONGO_DB"]]
-    col= db[temp["MONGO_COLL"]]
 
-    insert_dict = {"reco_id": id, "person_name": name, "db_path": db_path }
-
-    update_query = { "reco_id": id }
-
-    if col.find_one(update_query) is not None:
-        log_to_file(f'ID {id} already exists in db {temp["MONGO_DB"]} and collection {temp["MONGO_COLL"]}. \
-            Images will be updated/added.', "INFO")
-
-        newvalues = { "$set": { "person_name": name, "db_path": db_path } }
-        
-        col.update_one(update_query, newvalues)
-
-        return f"{id} already exists in DB, updated images.", 900
-    
-    x = col.insert_one(insert_dict)
-
-    log_to_file(f'ID {id} successfully inserted to db {temp["MONGO_DB"]} and collection {temp["MONGO_COLL"]}. \
-            The resulting MongoDB identifier is {str(x.inserted_id)}', "SUCCESS")
-
-    return str(x.inserted_id), 800
 
 
 def save_imgs(img_arrs, folder, id, augmented=False):
@@ -201,12 +179,12 @@ def main_upload(mongo_client, img_paths, id, name, delete_pickle, rebuild_db):
 
 
 
-    log_to_file("Inserting to MongoDB...", "INFO")
+    log_to_file("Inserting to MySQL...", "INFO")
     try:
-        id_db, message = insert_to_db(mongo_client, id, name, os.path.join(temp["DB_PATH"], folder_name))
-        log_to_file("Successfully inserted into MongoDB...", "SUCCESS")
+        id_db, message = insert_to_db(id, name, os.path.join(temp["DB_PATH"], folder_name))
+        log_to_file("Successfully inserted into MySQL...", "SUCCESS")
     except:
-        log_to_file("Insert into MongoDB failed. Please check your settings.", "FAILURE")
-        return "Insert to MongoDB failed. Please check your DB settings and rety.", 150, 605, None, None, None
+        log_to_file("Insert into MySQL failed. Please check your settings.", "FAILURE")
+        return "Insert to MySQL failed. Please check your DB settings and rety.", 150, 605, None, None, None
 
     return id_db, message, message_pickle, rebuilt_db, res_main, res_aug

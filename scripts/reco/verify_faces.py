@@ -2,11 +2,12 @@ from unit_tests.params import NAME
 from deepface import DeepFace
 import glob
 from dotenv import dotenv_values
-import pymongo
+from scripts.database_op.db_op import select_from_db
 import platform
 from scripts.utils.log_to_file import log_to_file
 from math import isclose
 from pathlib import Path
+import os
 
 temp = dotenv_values(".env")
 
@@ -14,26 +15,21 @@ def verify_face(mongo_client, id_, img_paths):
     log_to_file(f"Verifying {len(img_paths)} images...", "INFO")
     
     try:
-        db = mongo_client[temp["MONGO_DB"]]
-        coll= db[temp["MONGO_COLL"]]
-        row = coll.find_one({"reco_id": id_})
+        _, name, path = select_from_db(id_)
     except:
-        log_to_file("Problem getting ID, please check MongoDB settings.", "ERROR")
+        log_to_file("Problem getting ID, please check MySQL settings.", "ERROR")
         False, 116, None
 
+    if not os.path.exists(path):
+        return False, 113, None          
+   
 
-    if row is None:
-        log_to_file("Didn't find the ID in the database.", "ERROR")
-        return False, 400, None
-        
-    name = str(Path(row['db_path']).parts[-1]).split("-")[0]
-
-    images_db_aug = glob.glob(f"{row['db_path']}/augmented_imgs/*.png")
-    images_db_normal = glob.glob(f"{row['db_path']}/faces/*.png")
+    images_db_aug = glob.glob(f"{path}/augmented_imgs/*.png")
+    images_db_normal = glob.glob(f"{path}/faces/*.png")
 
     if platform.system() == "Windows":
-        images_db_aug = glob.glob(row['db_path'] + r"\augmented_imgs\*.png")
-        images_db_normal = glob.glob(row['db_path'] + r"\faces\*.png")        
+        images_db_aug = glob.glob(path + r"\augmented_imgs\*.png")
+        images_db_normal = glob.glob(path + r"\faces\*.png")        
 
     log_to_file(f"Found {len(images_db_aug)} augmented images and {len(images_db_normal)} real images in DB.", "INFO")
 
