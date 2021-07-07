@@ -329,9 +329,9 @@ def validate_score_tol(script_root):
     temp = dotenv_values(".env")
 
     if 'SCORE_TOL' in temp:
-        if temp['SCORE_TOL'] == '' or not temp['SCORE_TOL'].isnumeric():
-            log_to_file("Env file configured incorrectly: SCORE_TOL is empty or not numeric.", "ERROR")
-            env_errs.append("Env file configured incorrectly: SCORE_TOL is empty or not numeric.")
+        if temp['SCORE_TOL'] == '':
+            log_to_file("Env file configured incorrectly: SCORE_TOL is empty.", "ERROR")
+            env_errs.append("Env file configured incorrectly: SCORE_TOL is empty.")
 
         try:
             _ = float(temp['SCORE_TOL'])
