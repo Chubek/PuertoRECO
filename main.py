@@ -17,7 +17,7 @@ from scripts.utils.quality_asses import asses_img_quality
 connect_to_db()
 
 
-def main_reco(img_paths, id_, test_title=None, skip_verify=False, skip_db_search=False):    
+def main_reco(img_paths, id_, test_title=None, skip_verify=False, skip_db_search=False, skip_liveness=False):    
     test_str = "This is the real deal!" if not test_title else f"Test mode, test title: {test_title}"
     log_to_file(f"Starting recognition process with {len(img_paths)} images... {test_str}", "INFO")
 
@@ -51,19 +51,21 @@ def main_reco(img_paths, id_, test_title=None, skip_verify=False, skip_db_search
 
     log_to_file(f"A total of {len(face_img_paths)} real and augmented images are ready for verification.", "INFO")
 
-    liveness_pred = predict_spoof([f for f in face_img_paths if "AUGMENTED" not in f])
+    if not skip_liveness:
+        log_to_file("skip_liveness set to False. Detecting liveness...", "INFO")
+        liveness_pred = predict_spoof([f for f in face_img_paths if "AUGMENTED" not in f])
 
-    if type(liveness_pred) == int:
-        return liveness_pred, None, None
+        if type(liveness_pred) == int:
+            return liveness_pred, None, None
 
-    len_spoof = len([label for label, _ in liveness_pred if label == 1])
+        len_spoof = len([label for label, _ in liveness_pred if label == 1])
 
-    log_to_file(f"Found {len_spoof} spoof images.", "WARNING")
+        log_to_file(f"Found {len_spoof} spoof images.", "WARNING")
 
-    if len_spoof >= len([f for f in face_img_paths if "AUGMENTED" not in f]):
-        log_to_file("All faces were spoof. Aborting...", "ERROR")
+        if len_spoof >= len([f for f in face_img_paths if "AUGMENTED" not in f]):
+            log_to_file("All faces were spoof. Aborting...", "ERROR")
         
-        return 560, None, None
+            return 560, None, None
     
     if not skip_verify:
         log_to_file("skip_verify set to False, verifying...", "INFO")
@@ -143,7 +145,7 @@ def assess_quality_and_save(uploaded_images, save_path):
     saved = []
     rejected = []
     errors = []
-    
+
     for u_img in uploaded_images.values():
         log_to_file(f"Assessing score for image {u_img.filename}...", "INFO")
         status, score = asses_img_quality(u_img.read(), score_tol)
@@ -152,6 +154,9 @@ def assess_quality_and_save(uploaded_images, save_path):
             scores[u_img.filename] = score
 
             if status == 119:
+                if not os.path.exists(save_path):
+                    os.makedirs(save_path)
+
                 u_img.save(save_path, u_img.filename)
                 log_to_file(f"Image saved to {os.path.join(save_path, u_img.filename)}.", "SUCCESS")
                 saved.append(u_img.filename)
@@ -164,6 +169,6 @@ def assess_quality_and_save(uploaded_images, save_path):
             log_to_file(f"File {u_img.filename} had issues assesing score. Error logged.", "ERROR")
             errors.append(u_img.filename)
 
-    return 427, saved, rejected, errors
+    return scores, saved, rejected, errors
 
 

@@ -17,13 +17,17 @@ app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = temp["UPLOAD_FOLDER"]
  
     
-@app.route('/verify')
+@app.route('/verify', methods=['POST'])
 def verify():
-    id_folder = request.args['id']
+    id_folder = request.body['upload_id']
     id_ = id_folder.split("-")[0]
 
+    skip_verify = True if request.body['skip_verify'].lower() == "true" else False
+    skip_db_search = True if request.body['skip_db_search'].lower() == "true" else False
+    skip_liveness = True if request.body['skip_liveness'].lower() == "true" else False
+
     if not re.match(r"{temp['ID_REGEX']}", id_):
-        return jsonify({"recognition_result": 112})
+        return jsonify({"recognition_code": 112, "recognition_results": None, "system_errors": None})
 
     folder_path = os.path.join(app.root_path, 'static', id_folder)
 
@@ -33,39 +37,45 @@ def verify():
         imgs = glob.glob(f"{folder_path}/*.[pj][np]*")
 
 
-    result = main_reco(imgs, id)
+    code, name, distancee = main_reco(imgs, id_, skip_liveness=skip_liveness, skip_verify=skip_verify, skip_db_search=skip_db_search)
 
-    return jsonify({"recognition_result": result})
+    if code == 128:
+        return jsonify({"recognition_code": 128, "recognition_results": None, "system_errors": {"not_in_env": name[0], "env_errs": name[1]}})
+
+    return jsonify({"recognition_code": code, "recognition_results": {"name": name, "distance": distancee}, "system_errors": None})
 
 
-@app.route('/upload_verify', methods=['POST'])
+@app.route('/upload_imgs', methods=['POST'])
 def upload_verify():
-    id_ = request.args['id']
+    id_ = request.body['id']
 
     if not re.match(rf"{temp['ID_REGEX']}", id_):
-        return jsonify({"upload_id": None, "message": "ID doesn't match pattern."})
+        return jsonify({"upload_id": None, "message": "ID doesn't match pattern.", "upload_results": None})
 
     files = request.files
 
-    if len(request.files) == 0:
-        return jsonify({"upload_id": None, "message": "No files uploaded"})
+    if len(files) == 0:
+        return jsonify({"upload_id": None, "message": "No files uploaded", "upload_results": None})
 
     folder_name = f"{id_}-{time.time()}"
 
     folder_path = os.path.join(app.root_path, 'static', id_)
 
-    for uploaded_file in files:
-        uploaded_file.save(folder_path, uploaded_file.filename)
+    scores, saved, rejected, errors = assess_quality_and_save(request.files, folder_path)
 
-    return jsonify({"upload_id": folder_name, "message": f"Files saved to {folder_path}. Pass the ID with verify?id=upload_id to verify.\
-         Pass the ID with upload_db?id=upload_id&name=name&dp=True&rdb=True to upload to db. Files will be deleted after 24 hours."})
+    if scores == 128:
+        return jsonify({"upload_id": None, "message": f"Sys error: .env file", "upload_results": {"not_in_env": saved, \
+        "env_errs": rejected}})
+
+    return jsonify({"upload_id": folder_name, "message": f"Files saved to {folder_path}.", "upload_results": {"scores": scores, \
+        "saved": saved, "rejected": rejected, "errors": errors}})
 
 
 
 
-@app.route('/upload_db')
+@app.route('/upload_db', )
 def upload_db():
-    id_folder = request.args['id']
+    id_folder = request.body['upload_id']
     id_ = id_folder.split("-")[0]
     name = request.args['name']
     delete_pickle = True if request.args['dp'] == 'True' else False
@@ -73,7 +83,7 @@ def upload_db():
 
     if not re.match(r"{temp['ID_REGEX']}", id_) or not re.match("[a-z]+_[a-z]+", name):
         return jsonify({"result": "Name and/or ID do not match pattern", "message": None, "pickle_message": None, \
-        "rebuild_db": None, "res_main": None, "res_aug": None})
+        "rebuild_db": None, "upload_results": None})
 
 
     folder_path = os.path.join(app.root_path, 'static', id_folder)
@@ -85,8 +95,14 @@ def upload_db():
 
     result, message, message_pickle, rebuilt_db, res_main, res_aug = upload_to_db(imgs, id_, name, delete_pickle, rebuild_db)
 
+    if message == 128:
+        return jsonify({"result": "Sys error: env", "message": message, "pickle_message": None, \
+        "rebuild_db": None, "upload_results": {"not_in_env": result[0], "env_errs": result[1]}})
+    
     return jsonify({"result": result, "message": message, "pickle_message": message_pickle, \
-        "rebuild_db": rebuilt_db, "res_main": res_main, "res_aug": res_aug})
+        "rebuild_db": rebuilt_db, "upload_results": {"res_main": res_main, "res_aug": res_aug}})
+
+
 
 def run_app():
     app.run(host='0.0.0.0', debug=True, use_reloader=False)
