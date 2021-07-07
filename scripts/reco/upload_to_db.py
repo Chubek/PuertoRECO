@@ -93,7 +93,7 @@ def save_imgs(img_arrs, folder, id, augmented=False):
     return saved_res
 
 
-def main_upload(mongo_client, img_paths, id, name, delete_pickle, rebuild_db):
+def main_upload(img_paths, id, name, delete_pickle, rebuild_db):
     log_to_file(f"Upload to db initiated with {len(img_paths)} images.", "INFO")
 
     arrs = [cv2.imread(path) for path in img_paths]
@@ -185,6 +185,6 @@ def main_upload(mongo_client, img_paths, id, name, delete_pickle, rebuild_db):
         log_to_file("Successfully inserted into MySQL...", "SUCCESS")
     except:
         log_to_file("Insert into MySQL failed. Please check your settings.", "FAILURE")
-        return "Insert to MySQL failed. Please check your DB settings and rety.", 150, 605, None, None, None
+        return "Insert to MySQL failed. Please check your DB settings and rety.", 150, None, None, res_main, res_aug
 
     return id_db, message, message_pickle, rebuilt_db, res_main, res_aug

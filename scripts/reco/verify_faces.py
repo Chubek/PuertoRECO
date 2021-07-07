@@ -11,7 +11,7 @@ import os
 
 temp = dotenv_values(".env")
 
-def verify_face(mongo_client, id_, img_paths):
+def verify_face(id_, img_paths):
     log_to_file(f"Verifying {len(img_paths)} images...", "INFO")
     
     try:

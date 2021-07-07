@@ -6,14 +6,15 @@ from scripts.reco.verify_faces import verify_face
 from scripts.reco.upload_to_db import main_upload, save_imgs, verify_image
 from scripts.reco.prepare_img import prepare_img
 from scripts import *
-import pymongo
+from scripts.database_op.db_op import connect_to_db
 from scripts.liveness.predict_label import *
 import functools
 import operator
 import os
-from scripts.utils.validate_env import validate_env, validate_mongo_env
+from scripts.utils.validate_env import validate_env, validate_score_tol
+from scripts.utils.quality_asses import asses_img_quality
 
-
+connect_to_db()
 
 
 def main_reco(img_paths, id_, test_title=None, skip_verify=False, skip_db_search=False):    
@@ -24,13 +25,8 @@ def main_reco(img_paths, id_, test_title=None, skip_verify=False, skip_db_search
         log_to_file("Both skip_verify and skip_db_search set to True. One must be False. Aborting...", "ERROR")
         return 143, None, None
 
-    dbclient, not_in_env, env_errs = dbclient_tuple
 
-    if not dbclient:  
-        return 128, [not_in_env, env_errs], None
-    
-
-    temp, not_in_env, env_errs = validate_env(os.path.dirname(os.path.realpath(__file__)))
+    temp, not_in_env, env_errs = validate_env(os.getcwd())
 
     if not temp:        
         return 128, [not_in_env, env_errs], None
@@ -71,7 +67,7 @@ def main_reco(img_paths, id_, test_title=None, skip_verify=False, skip_db_search
     
     if not skip_verify:
         log_to_file("skip_verify set to False, verifying...", "INFO")
-        status, message, distance = verify_face(dbclient, id_, face_img_paths)
+        status, message, distance = verify_face(id_, face_img_paths)
     else:
         log_to_file("skip_verify set to True. Skipping verification.", "INFO")
         status, message, distance = False, 500, None
@@ -105,13 +101,9 @@ def main_reco(img_paths, id_, test_title=None, skip_verify=False, skip_db_search
 def upload_to_db(imgs_path, id_, name, delete_pickle, rebuild_db, test_title=None):
     test_str = "This is the real deal!" if not test_title else f"Test mode, test title: {test_title}"
     log_to_file(f"Starting upload to DB for id {id_} and name {name}... {test_str}", "INFO")
-    
-    dbclient, not_in_env, env_errs = dbclient_tuple
 
-    if not dbclient:  
-        return [not_in_env, env_errs], 128, None, None, None, None
 
-    temp, not_in_env, env_errs = validate_env(os.path.dirname(os.path.realpath(__file__)))
+    temp, not_in_env, env_errs = validate_env(os.getcwd())
 
     if not temp:        
         return [not_in_env, env_errs], 128, None, None, None, None
@@ -127,9 +119,51 @@ def upload_to_db(imgs_path, id_, name, delete_pickle, rebuild_db, test_title=Non
         log_to_file("Length of the given images array was 0.", "FAILURE")
         return "Length of imgs list was 0", 981, None, None, None, None
     
-    result, message, message_pickle, rebuilt_db, res_main, res_aug = main_upload(dbclient, imgs_path, id_, name, delete_pickle, rebuild_db)
+    result, message, message_pickle, rebuilt_db, res_main, res_aug = main_upload(imgs_path, id_, name, delete_pickle, rebuild_db)
 
     log_to_file("Upload to DB done.", "FINISH")
     
     return result, message, message_pickle, rebuilt_db, res_main, res_aug
+
+
+
+
+def assess_quality_and_save(uploaded_images, save_path):
+    log_to_file(f"Assessing image quality for {len(uploaded_images)} uploaded images...", "INFO")
+    
+    score_tol, not_in_env, env_errs = validate_score_tol(os.getcwd())
+
+    if not score_tol:
+        log_to_file("Error with SCORE_TOL env var. Aborting...", "ERROR")        
+        return 128, not_in_env, env_errs, None
+
+    log_to_file(f"Score tolerance is {score_tol}.", "INFO")
+
+    scores = {}
+    saved = []
+    rejected = []
+    errors = []
+    
+    for u_img in uploaded_images.values():
+        log_to_file(f"Assessing score for image {u_img.filename}...", "INFO")
+        status, score = asses_img_quality(u_img.read(), score_tol)
+
+        if score:
+            scores[u_img.filename] = score
+
+            if status == 119:
+                u_img.save(save_path, u_img.filename)
+                log_to_file(f"Image saved to {os.path.join(save_path, u_img.filename)}.", "SUCCESS")
+                saved.append(u_img.filename)
+
+            else:
+                log_to_file(f"Image {u_img.filename} didn't reach score tolerance. Rejected.", "FAILURE")
+                rejected.append(u_img.filename)
+
+        else:
+            log_to_file(f"File {u_img.filename} had issues assesing score. Error logged.", "ERROR")
+            errors.append(u_img.filename)
+
+    return 427, saved, rejected, errors
+
 
