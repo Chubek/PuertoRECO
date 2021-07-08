@@ -47,13 +47,17 @@ def connect_to_db():
 def insert_to_db(id_, name, db_path, in_place_id=False):
     cursor = db_client.cursor()
     
-    if in_place_id and (in_place_id != 850 or in_place_id != 800 or in_place_id != 838):
+    if in_place_id == 850 or (in_place_id != 800 and in_place_id != 838):
         cursor.execute(COMMAND_UPDATE_NAME, (name, id_))
         cursor.execute(COMMAND_UPDATE_PATH, (db_path, id_))
         db_client.commit()
-        log_to_file(f'ID {id_} already exists in db and in_place was set to true. Folder deleted and DB path replaced.', "INFO")
-        return in_place_id, 900
+
+        message = 850 if in_place_id == 850 else 900
+
+        log_to_file(f'ID {id_} already exists in db. Folder deleted and DB path replaced or updated.', "INFO")
+        return in_place_id, message
     else:
+        log_to_file(f'ID {id_} does not exist in MySQL. Inserting...', "INFO")
         cursor.execute(COMMAND_INSERT, (id_, name, db_path))
         db_client.commit()
     

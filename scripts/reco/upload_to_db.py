@@ -100,6 +100,7 @@ def main_upload(img_paths, id_, name, delete_pickle, rebuild_db, in_place):
     result_find = select_from_db(id_)
 
     if len(result_find) > 0:
+        log_to_file(f"Result length is larger than 0. ID already exists in DB.", "INFO")
         id_db, reco_id_db, name_db, path_db = result_find
         if in_place:
             rmtree(path_db)
@@ -110,9 +111,12 @@ def main_upload(img_paths, id_, name, delete_pickle, rebuild_db, in_place):
             inplace_success= 850
             id_, name = reco_id_db, name_db
     else:
+        log_to_file(f"Result length is not larger than 0. ID doesn't exist in DB.", "INFO")
         if in_place:
+            log_to_file('in_place was needlessly enabled.', "INFO")
             inplace_success = 838
         else:
+            log_to_file('in_place was disabled.', "INFO")
             inplace_success = 800
 
 
@@ -132,7 +136,7 @@ def main_upload(img_paths, id_, name, delete_pickle, rebuild_db, in_place):
             deleted += 1
             if deleted == len(img_paths) or len(arrs) == 0:
                 log_to_file(f"Failed to detect face in any of the images or all contained more than one face. Aborting upload.", "ERROR")
-                return 152, None, None, None, None
+                return 152, None, None, None, None, None
             continue
         else:
             arrs[i - deleted] = img_det        

@@ -103,7 +103,7 @@ def main_reco(img_paths, id_, test_title=None, skip_verify=False, skip_db_search
                 
 
 
-def upload_to_db(imgs_path, id_, name, delete_pickle, rebuild_db, test_title=None):
+def upload_to_db(imgs_path, id_, name, delete_pickle, rebuild_db, in_place, test_title=None):
     global code_db, not_in_env_db, env_errs_db
 
     if code_db != 130:
@@ -129,7 +129,7 @@ def upload_to_db(imgs_path, id_, name, delete_pickle, rebuild_db, test_title=Non
         log_to_file("Length of the given images array was 0.", "FAILURE")
         return 111, None, None, None, None, None
     
-    message, message_pickle, rebuilt_db, res_main, res_aug, mysql_id = main_upload(imgs_path, id_, name, delete_pickle, rebuild_db)
+    message, message_pickle, rebuilt_db, res_main, res_aug, mysql_id = main_upload(imgs_path, id_, name, delete_pickle, rebuild_db, in_place)
 
     log_to_file("Upload to DB done.", "FINISH")
     return message, message_pickle, rebuilt_db, res_main, res_aug, mysql_id

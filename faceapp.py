@@ -101,7 +101,7 @@ def upload_db():
     if len(request.form) == 0:
         return jsonify({"result_code": 107, "result_message": CODES_DICT[107], "upload_results": None, "system_errors": None})
 
-    if len(set(['upload_id', 'name', 'delete_pickles', 'rebuild_db']).intersection(set(request.form.keys()))) != 4:
+    if len(set(['upload_id', 'name', 'delete_pickles', 'rebuild_db', 'in_place']).intersection(set(request.form.keys()))) != 5:
         return jsonify({"result_code": 108, "result_message": CODES_DICT[108], "upload_results": None, "system_errors": None})
 
     id_folder = request.form['upload_id']
@@ -109,6 +109,8 @@ def upload_db():
     name = "_".join([n.lower() for n in request.form['name'].split(" ")])
     delete_pickle = True if request.form['delete_pickles'].lower() == 'true' else False
     rebuild_db = True if request.form['rebuild_db'].lower() == 'true' else False
+    in_place = True if request.form['in_place'].lower() == 'true' else False
+
 
     folder_path = os.path.join(temp['UPLOAD_FOLDER'], id_folder)
 
@@ -129,7 +131,7 @@ def upload_db():
     else: 
         imgs = glob.glob(f"{folder_path}/*.[pj][np]*")
 
-    message, message_pickle, rebuilt_db, res_main, res_aug, mysql_id = upload_to_db(imgs, id_, name, delete_pickle, rebuild_db)
+    message, message_pickle, rebuilt_db, res_main, res_aug, mysql_id = upload_to_db(imgs, id_, name, delete_pickle, rebuild_db, in_place)
 
     if message == 176:
         return jsonify({"result_code": message, "result_message": CODES_DICT[message], \

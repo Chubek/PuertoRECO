@@ -92,3 +92,4 @@ class TestValidateEnv(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+    close_log_file()

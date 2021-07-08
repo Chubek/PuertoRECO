@@ -14,11 +14,11 @@ temp = dotenv_values(".env")
 def verify_face(id_, img_paths):
     log_to_file(f"Verifying {len(img_paths)} images...", "INFO")
     
-    #try:
-    _, name, path = select_from_db(id_)
-   # except:
-    #    log_to_file("Problem getting ID, please check MySQL settings.", "ERROR")
-   #     return False, 116, None
+    try:
+        _, _, name, path = select_from_db(id_)
+    except:
+        log_to_file("Problem getting ID, please check MySQL settings.", "ERROR")
+        return False, 116, None
 
     if not os.path.exists(path):
         log_to_file("Path in the MySQL database doesn't exist in the image database.", "ERROR")

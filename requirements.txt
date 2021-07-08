@@ -13,3 +13,4 @@ imagecorruptions
 from-root
 image-quality
 joblib
+tqdm
