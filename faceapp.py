@@ -19,7 +19,7 @@ app = Flask(__name__)
     
 @app.route('/verify', methods=['POST'])
 def verify():
-    if 'form' not in request:
+    if len(request.form) == 0:
         return jsonify({"recognition_code": 107, "recognition_message": CODES_DICT[107], "recognition_results": None, "system_errors": None})
 
     if len(set(['upload_id', 'skip_verify', 'skip_db_search', 'skip_liveness']).intersection(set(request.form.keys()))) != 4:
@@ -98,7 +98,7 @@ def upload_verify():
 
 @app.route('/upload_db', methods=["POST"])
 def upload_db():
-    if 'form' not in request:
+    if len(request.form) == 0:
         return jsonify({"result_code": 107, "result_message": CODES_DICT[107], "upload_results": None, "system_errors": None})
 
     if len(set(['upload_id', 'name', 'delete_pickles', 'rebuild_db']).intersection(set(request.form.keys()))) != 4:

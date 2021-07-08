@@ -16,7 +16,8 @@ import operator
 from scripts.utils.log_to_file import log_to_file
 import platform
 import glob
-from scripts.database_op.db_op import insert_to_db
+from scripts.database_op.db_op import insert_to_db, select_from_db
+from shutil import rmtree
 
 temp = dotenv_values(".env")
 detector = MTCNN()
@@ -61,13 +62,13 @@ def augment_img(img_arrs):
     return functools.reduce(operator.iconcat, images_aug, [])
 
 
-def hash_id_name(id, name):
-    return hash(f"{id}_{name}")
+def hash_id_name(id_, name):
+    return hash(f"{id_}_{name}")
 
 
 
 
-def save_imgs(img_arrs, folder, id, augmented=False):
+def save_imgs(img_arrs, folder, id_, augmented=False):
     main_folder = os.path.join(temp["DB_PATH"], folder)
 
     face_folder = os.path.join(main_folder, "faces")
@@ -85,7 +86,7 @@ def save_imgs(img_arrs, folder, id, augmented=False):
         log_to_file(f"Folder {save_path_dir} created.", "SUCCESS")
 
     for i, img in enumerate(img_arrs):
-        save_path = os.path.join(save_path_dir, f"{au}_{i}_{id}_{dt.strftime('%m%d%Y')}.png")
+        save_path = os.path.join(save_path_dir, f"{au}_{i}_{id_}_{dt.strftime('%m%d%Y')}.png")
         cv2.imwrite(save_path, img)
         log_to_file(f"{save_path} saved to file.", "INFO")
         saved_res.append(save_path)
@@ -93,8 +94,27 @@ def save_imgs(img_arrs, folder, id, augmented=False):
     return saved_res
 
 
-def main_upload(img_paths, id, name, delete_pickle, rebuild_db):
+def main_upload(img_paths, id_, name, delete_pickle, rebuild_db, in_place):
     log_to_file(f"Upload to db initiated with {len(img_paths)} images.", "INFO")
+
+    result_find = select_from_db(id_)
+
+    if len(result_find) > 0:
+        id_db, reco_id_db, name_db, path_db = result_find
+        if in_place:
+            rmtree(path_db)
+            log_to_file('in_place was enabled and a path was found. Path deleted.', "INFO")
+            inplace_success = id_db
+        else:
+            log_to_file("in_place was disabled, files will be added to the previous folder.", "INFO")
+            inplace_success= 850
+            id_, name = reco_id_db, name_db
+    else:
+        if in_place:
+            inplace_success = 838
+        else:
+            inplace_success = 800
+
 
     arrs = [cv2.imread(path) for path in img_paths]
 
@@ -128,11 +148,11 @@ def main_upload(img_paths, id, name, delete_pickle, rebuild_db):
     log_to_file(f"Got {len(augs)} augmented images.", "INFO")
 
 
-    folder_name = f"{name}-{id}"
+    folder_name = f"{name}-{id_}"
 
     log_to_file("Saving images...", "INFO")
-    res_main = save_imgs(arrs, folder_name, id)
-    res_aug = save_imgs(augs, folder_name, id, augmented=True)
+    res_main = save_imgs(arrs, folder_name, id_)
+    res_aug = save_imgs(augs, folder_name, id_, augmented=True)
     
     log_to_file(f"A total of {len(res_aug) + len(res_main)} images savd to {folder_name}", "SUCCESS")
 
@@ -181,7 +201,7 @@ def main_upload(img_paths, id, name, delete_pickle, rebuild_db):
 
     log_to_file("Inserting to MySQL...", "INFO")
     try:
-        id_db, message = insert_to_db(id, name, os.path.join(temp["DB_PATH"], folder_name))
+        id_db, message = insert_to_db(id_, name, os.path.join(temp["DB_PATH"], folder_name), in_place_id=inplace_success)
         log_to_file("Successfully inserted into MySQL...", "SUCCESS")
     except:
         log_to_file("Insert into MySQL failed. Please check your settings.", "FAILURE")

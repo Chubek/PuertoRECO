@@ -20,12 +20,14 @@ CODES_DICT = {
     178: "Problem loading liveness detection model. Check your URL.",
     560: "All faces were spoof.",
     143: "Both skip_verify and skip_db_search set to True. One must be False.",
-    900: "ID already exists in db. Info updated.",
-    800: "ID {id} successfully inserted to db.",
+    900: "ID already exists in db and in_place was set to true. Folder deleted and DB path replaced.",
+    838: "ID successfully inserted into DB. in_place was needlessly enabled.",
+    800: "ID successfully inserted to db.",
+    850: "ID successfully inserted to db. in_place was disabled, so the files were added to the previous ones.",
     189: "Folder already uploaded to DB. Can't verify to upload again.",
-    107: "Endpoint request needs to be www-form-urlencoded.",
-    108: "Acceptable upload_db endpoint www-form-urlencoded keys: upload_id, name, delete_pickles, rebuild_db",
-    109: "Acceptable verify endpoint www-form-urlencoded keys: upload_id, skip_verify, skip_search_db, skip_liveness",
-    110: "No args provided for upload_imgs endpoint, or id arg must be provided through upload_img?id="
+    107: "Endpoint request needs to be www-form-urlencoded, or form is empty.",
+    108: "Acceptable upload_db endpoint www-form-urlencoded keys: upload_id, name, delete_pickles, rebuild_db, in_place.",
+    109: "Acceptable verify endpoint www-form-urlencoded keys: upload_id, skip_verify, skip_db_search, skip_liveness",
+    110: "No args provided for upload_imgs endpoint, or id arg must be provided through upload_imgs?id="
 
 }

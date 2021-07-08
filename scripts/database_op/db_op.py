@@ -44,28 +44,43 @@ def connect_to_db():
         return 129, not_in_env, env_errs
     return 130, None, None
 
-def insert_to_db(id_, name, db_path):
+def insert_to_db(id_, name, db_path, in_place_id=False):
     cursor = db_client.cursor()
     
-    try:
+    if in_place_id and (in_place_id != 850 or in_place_id != 800 or in_place_id != 838):
         cursor.execute(COMMAND_UPDATE_NAME, (name, id_))
         cursor.execute(COMMAND_UPDATE_PATH, (db_path, id_))
         db_client.commit()
-        log_to_file(f'ID {id_} already exists in db. Info updated.', "INFO")
-        return "Not Created", 900
-    except:
+        log_to_file(f'ID {id_} already exists in db and in_place was set to true. Folder deleted and DB path replaced.', "INFO")
+        return in_place_id, 900
+    else:
         cursor.execute(COMMAND_INSERT, (id_, name, db_path))
         db_client.commit()
     
- 
+    in_place_log = {
+        838: "in_place was needlessly enabled.",
+        850: "in_place was disalbed so files were added.",
+        800: "in_place was disalbed and ID wasn't in DB, original data was created."
+    }
 
-    log_to_file(f'ID {id} successfully inserted to db. The resulting MySQL identifier is {cursor.lastrowid}', "SUCCESS")
-    return cursor.lastrowid, 800
+    log_to_file(f'{in_place_log[in_place_id]}', "SUCCESS")
+    return cursor.lastrowid, in_place_id
 
 def select_from_db(id_):
+    log_to_file(f"Selecting from DB given ID {id_}", "INFO")
     cursor = db_client.cursor()
 
     cursor.execute(COMMAND_SELECT(id_))
 
-    return cursor.fetchall()[0][1:]
+    
+    res_all = cursor.fetchall()
+
+    log_to_file(f"ID selected from DB. Got results {res_all}", "INFO")
+
+    if len(res_all) == 0:
+        res = []
+    else:
+        res = res_all[0]
+
+    return res
 
