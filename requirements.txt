@@ -12,3 +12,4 @@ binaryornot
 imagecorruptions
 from-root
 image-quality
+joblib

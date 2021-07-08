@@ -2,7 +2,6 @@ from params import *
 from main import *
 import unittest
 import os
-from scripts.utils.log_to_file import open_log_file, close_log_file
 from dotenv import dotenv_values
 from shutil import rmtree
 from scripts.utils.validate_env import *
@@ -88,19 +87,21 @@ class TestValidateEnv(unittest.TestCase):
         Test that for super_pass check
         """
 
-        val_res, not_in_env, env_errs = validate_super_pass(parentdir)
+        val_res, code, not_in_env, env_errs = validate_super_pass(parentdir)
         
+        self.assertEqual(code, 175)
         self.assertEqual(val_res, False)
         self.assertListEqual(not_in_env, [])
         self.assertIn("Env file configured incorrectly: SUPER_PASS is not secure.", env_errs)
 
 
-    def test_hh_mongo_val(self):
+    def test_hh_mysql_val(self):
         """
         Test that for super_pass check
         """
-        val_res, not_in_env, env_errs = validate_mongo_env(parentdir)
+        val_res, code, not_in_env, env_errs = validate_mysql_env(parentdir)
         
+        self.assertEqual(code, 175)
         self.assertEqual(val_res, False)
         self.assertListEqual(not_in_env, [])
         self.assertEqual([f"Env file configured incorrectly: {fname} is either empty or does not match pattern, it can only be letter and underscore." \
@@ -111,8 +112,6 @@ class TestValidateEnv(unittest.TestCase):
         os.rename(env_file_renamed, env_file)
 
 if __name__ == "__main__":
-    open_log_file()
     unittest.main()
-    close_log_file()
 
     

@@ -1,8 +1,6 @@
 import os
 import sys
 import inspect
-import random
-from pathlib import Path
 
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 parentdir = os.path.dirname(currentdir)
@@ -23,7 +21,8 @@ IMG_NOT_IN_DB = [r'I:\face_reco\test_imgs\angie_jolie\1.jpg', r'I:\face_reco\tes
 HARD_TO_VERIFY = [r'I:\face_reco\test_imgs\rock_hard_verify\1.jpg', r'I:\face_reco\test_imgs\rock_hard_verify\2.png', r'I:\face_reco\test_imgs\rock_hard_verify\2.png',\
      r'I:\face_reco\test_imgs\rock_hard_verify\unnamed.jpg']
 IMGS_SPOOF = [r'I:\face_reco\test_imgs\spoof_imgs\1.jpg', r'I:\face_reco\test_imgs\spoof_imgs\2.jpg', r'I:\face_reco\test_imgs\spoof_imgs\3.jpg']
-
+PICKLED_REQ = os.path.join(os.getcwd(), "unit_tests", "necessary_files", "req_files.pickle")
+TEMP_PATH = os.path.join(os.getcwd(), "unit_tests", "necessary_files", "temp")
 ID = "RECO_ID_9990"
 RECO_ID = "RECO_ID_9990"
 NAME = "rock"

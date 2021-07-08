@@ -9,7 +9,7 @@ def predict_spoof(img_paths):
     
     if not model:
         log_to_file("Problem loading model, aborting...", "ERROR")
-        return 176
+        return 178
 
     ret = []
 

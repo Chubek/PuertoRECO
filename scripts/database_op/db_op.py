@@ -1,6 +1,6 @@
 import mysql.connector
 from scripts.utils.log_to_file import log_to_file
-from scripts.utils.validate_env import validate_mongo_env
+from scripts.utils.validate_env import validate_mysql_env
 import os
 import inspect
 
@@ -18,11 +18,11 @@ def connect_to_db():
     global COMMAND_UPDATE_PATH
     global COMMAND_SELECT
 
-    sql_uri, not_in_env, env_errs = validate_mongo_env(os.getcwd())
+    sql_uri, code, not_in_env, env_errs = validate_mysql_env(os.getcwd())
 
-    if not sql_uri:
+    if code == 176:
         log_to_file("Problem with MySQL URI. Aborting...", "ERROR")
-        return False, not_in_env, env_errs
+        return code, not_in_env, env_errs
 
     try:
         log_to_file("Creating MySQL client...", "INFO")
@@ -41,11 +41,10 @@ def connect_to_db():
         log_to_file("Created MySQL client successfully.", "SUCCESS")
     except:
         log_to_file("Error creating MySQL client, check SQL_URI.", "ERROR")
-        return False, not_in_env, env_errs
+        return 129, not_in_env, env_errs
+    return 130, None, None
 
-    return True, None, None
-
-def insert_to_db(id_, name, db_path):    
+def insert_to_db(id_, name, db_path):
     cursor = db_client.cursor()
     
     try:
@@ -53,7 +52,7 @@ def insert_to_db(id_, name, db_path):
         cursor.execute(COMMAND_UPDATE_PATH, (db_path, id_))
         db_client.commit()
         log_to_file(f'ID {id_} already exists in db. Info updated.', "INFO")
-        return f"{id_} already exists in DB, updated images.", 900
+        return "Not Created", 900
     except:
         cursor.execute(COMMAND_INSERT, (id_, name, db_path))
         db_client.commit()
@@ -61,7 +60,6 @@ def insert_to_db(id_, name, db_path):
  
 
     log_to_file(f'ID {id} successfully inserted to db. The resulting MySQL identifier is {cursor.lastrowid}', "SUCCESS")
-
     return cursor.lastrowid, 800
 
 def select_from_db(id_):

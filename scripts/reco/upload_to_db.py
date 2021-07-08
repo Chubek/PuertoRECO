@@ -112,7 +112,7 @@ def main_upload(img_paths, id, name, delete_pickle, rebuild_db):
             deleted += 1
             if deleted == len(img_paths) or len(arrs) == 0:
                 log_to_file(f"Failed to detect face in any of the images or all contained more than one face. Aborting upload.", "ERROR")
-                return "Could not detect a face in any of the images or all contained more than one face", 150, None, None, None, None
+                return 152, None, None, None, None
             continue
         else:
             arrs[i - deleted] = img_det        
@@ -185,6 +185,6 @@ def main_upload(img_paths, id, name, delete_pickle, rebuild_db):
         log_to_file("Successfully inserted into MySQL...", "SUCCESS")
     except:
         log_to_file("Insert into MySQL failed. Please check your settings.", "FAILURE")
-        return "Insert to MySQL failed. Please check your DB settings and rety.", 150, None, None, res_main, res_aug
+        return 150, None, None, res_main, res_aug
 
-    return id_db, message, message_pickle, rebuilt_db, res_main, res_aug
+    return message, message_pickle, rebuilt_db, res_main, res_aug, id_db

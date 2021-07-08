@@ -147,9 +147,9 @@ def validate_env(script_root):
     log_to_file(f".env file validated. {len(not_in_env)} keys not found, {len(env_errs)} errors found.", "INFO")
 
     if len(not_in_env) == 0 and len(env_errs) == 0:
-        return True, True, True
+        return temp, 175, True, True
 
-    return False, not_in_env, env_errs
+    return False, 176, not_in_env, env_errs
 
 def validate_id_regex(script_root):
     log_to_file("Validating .env file and ID_REGEX...", "INFO")
@@ -180,9 +180,13 @@ def validate_id_regex(script_root):
 
 
     if len(not_in_env) == 0 and len(env_errs) == 0:
-        return temp, True, True
+        return temp['ID_REGEX'], 175, True, True
 
-    return False, not_in_env, env_errs
+    return False, 176, not_in_env, env_errs
+
+
+
+    return False, 176, not_in_env, env_errs
 
 def validate_super_pass(script_root):
     log_to_file("Validating .env file and SUPER_PASS...", "INFO")
@@ -214,9 +218,9 @@ def validate_super_pass(script_root):
 
 
     if len(not_in_env) == 0 and len(env_errs) == 0:
-        return temp['SUPER_PASS'], True, True
+        return temp['SUPER_PASS'], 175, True, True
 
-    return False, not_in_env, env_errs
+    return False, 176, not_in_env, env_errs
 
 def validate_mysql_env(script_root):
     log_to_file("Validating .env file and MySQL related keys...", "INFO")
@@ -310,9 +314,9 @@ def validate_mysql_env(script_root):
     }
 
     if len(not_in_env) == 0 and len(env_errs) == 0:
-        return sql_uri, True, True
+        return sql_uri, 175, True, True
 
-    return False, not_in_env, env_errs
+    return False, 176, not_in_env, env_errs
 
 
 def validate_score_tol(script_root):
@@ -343,10 +347,21 @@ def validate_score_tol(script_root):
         log_to_file("SCORE_TOL is not in .env", "ERROR")
         not_in_env.append("SCORE_TOL")
 
+    if 'UPLOAD_FOLDER' in temp:
+        if temp['UPLOAD_FOLDER'] == '' or not os.path.isdir(temp['UPLOAD_FOLDER']):
+            log_to_file("Env file configured incorrectly: UPLOAD_FOLDER is empty string or is not a path.", "ERROR")
+            env_errs.append("Env file configured incorrectly: UPLOAD_FOLDER is empty string or is noth a path.")
+        
+    else:
+        log_to_file("UPLOAD_FOLDER is not in .env", "ERROR")
+        not_in_env.append("UPLOAD_FOLDER")
+
     log_to_file(f"MySQL keys and .env validated. {len(not_in_env)} keys not found, {len(env_errs)} errors found.", "INFO")
 
     
     if len(not_in_env) == 0 and len(env_errs) == 0:
-        return float(temp['SCORE_TOL']), True, True
+        if not os.path.exists(temp['UPLOAD_FOLDER']):
+            os.makedirs(temp['UPLOAD_FOLDER'])
+        return {"SCORE_TOL": float(temp['SCORE_TOL']), "UPLOAD_FOLDER": temp['UPLOAD_FOLDER']}, 175, True, True
 
-    return False, not_in_env, env_errs
+    return False, 176, not_in_env, env_errs

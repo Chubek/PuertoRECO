@@ -1,7 +1,6 @@
 from params import *
 import unittest
 import os
-from scripts.utils.log_to_file import open_log_file, close_log_file
 from dotenv import dotenv_values
 from shutil import rmtree
 from main import *
@@ -92,8 +91,6 @@ class TestUpload(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    open_log_file()
     unittest.main()
-    close_log_file()
 
     

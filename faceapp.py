@@ -2,34 +2,48 @@ import os
 from flask import Flask, request, render_template, send_from_directory, url_for, redirect, jsonify
 from dotenv import dotenv_values
 from main import *
-import threading
 import re
-import base64
 temp = dotenv_values(".env")
 import glob
 import platform
 import time
 from dotenv import dotenv_values
+from codes_dict import CODES_DICT
+from scripts.utils.server_shutdown import shutdown_server
+from scripts.utils.log_to_file import close_log_file
 
 temp = dotenv_values(".env")
 
 app = Flask(__name__)
-app.config['UPLOAD_FOLDER'] = temp["UPLOAD_FOLDER"]
  
     
 @app.route('/verify', methods=['POST'])
 def verify():
-    id_folder = request.body['upload_id']
+    if 'form' not in request:
+        return jsonify({"recognition_code": 107, "recognition_message": CODES_DICT[107], "recognition_results": None, "system_errors": None})
+
+    if len(set(['upload_id', 'skip_verify', 'skip_db_search', 'skip_liveness']).intersection(set(request.form.keys()))) != 4:
+        return jsonify({"recognition_code": 109, "recognition_message": CODES_DICT[109], "recognition_results": None, "system_errors": None})
+
+    id_folder = request.form['upload_id']
     id_ = id_folder.split("-")[0]
 
-    skip_verify = True if request.body['skip_verify'].lower() == "true" else False
-    skip_db_search = True if request.body['skip_db_search'].lower() == "true" else False
-    skip_liveness = True if request.body['skip_liveness'].lower() == "true" else False
+    skip_verify = True if request.form['skip_verify'].lower() == "true" else False
+    skip_db_search = True if request.form['skip_db_search'].lower() == "true" else False
+    skip_liveness = True if request.form['skip_liveness'].lower() == "true" else False
 
-    if not re.match(r"{temp['ID_REGEX']}", id_):
-        return jsonify({"recognition_code": 112, "recognition_results": None, "system_errors": None})
+    folder_path = os.path.join(temp['UPLOAD_FOLDER'], id_folder)
+    if os.path.exists(f"{folder_path}_UPLOADED_TO_DB"):
+        return jsonify({"recognition_code": 189, "recognition_message": CODES_DICT[189], "recognition_results": None, "system_errors": None})
 
-    folder_path = os.path.join(app.root_path, 'static', id_folder)
+
+    id_re_code, not_in_env, env_errs = main_id_regex(id_)
+
+    if id_re_code != 126:
+        return jsonify({"recognition_code": 112, "recognition_message": CODES_DICT[id_re_code], "recognition_results": None,\
+              "system_errors": {"not_in_env": not_in_env, "env_errs": env_errs}})
+
+    
 
     if platform.system == "Windows":
         imgs = glob.glob(folder_path + r"\*.[pj][np]*")
@@ -37,75 +51,104 @@ def verify():
         imgs = glob.glob(f"{folder_path}/*.[pj][np]*")
 
 
-    code, name, distancee = main_reco(imgs, id_, skip_liveness=skip_liveness, skip_verify=skip_verify, skip_db_search=skip_db_search)
+    code, name, distance = main_reco(imgs, id_, skip_liveness=skip_liveness, skip_verify=skip_verify, skip_db_search=skip_db_search)
 
-    if code == 128:
-        return jsonify({"recognition_code": 128, "recognition_results": None, "system_errors": {"not_in_env": name[0], "env_errs": name[1]}})
+    if code == 176:
+        return jsonify({"recognition_code": code, "recognition_message": CODES_DICT[code], "recognition_results": None,\
+             "system_errors": {"not_in_env": name, "env_errs": distance}})
 
-    return jsonify({"recognition_code": code, "recognition_results": {"name": name, "distance": distancee}, "system_errors": None})
+    return jsonify({"recognition_code": code, "recognition_message": CODES_DICT[code], "recognition_results": {"name": name, "distance": distance}, "system_errors": None})
 
 
 @app.route('/upload_imgs', methods=['POST'])
 def upload_verify():
-    id_ = request.body['id']
+    if 'id' not in request.args:
+        return {"upload_results": None, "upload_code": 110, "upload_message": \
+            CODES_DICT[110], "system_errors": None}
 
-    if not re.match(rf"{temp['ID_REGEX']}", id_):
-        return jsonify({"upload_id": None, "message": "ID doesn't match pattern.", "upload_results": None})
+    id_ = request.args['id']
+
+
+    id_re_code, not_in_env, env_errs = main_id_regex(id_)
+
+    if id_re_code != 126:
+        return {"upload_results": None, "upload_code": id_re_code, "upload_message": \
+            CODES_DICT[id_re_code], "system_errors": {"not_in_env": not_in_env, "env_errs": env_errs}}
+
 
     files = request.files
 
     if len(files) == 0:
-        return jsonify({"upload_id": None, "message": "No files uploaded", "upload_results": None})
+        return {"upload_results": None, "upload_code": 117, "upload_message": \
+            CODES_DICT[117], "system_errors": None}
 
-    folder_name = f"{id_}-{time.time()}"
-
-    folder_path = os.path.join(app.root_path, 'static', id_)
-
-    scores, saved, rejected, errors = assess_quality_and_save(request.files, folder_path)
-
-    if scores == 128:
-        return jsonify({"upload_id": None, "message": f"Sys error: .env file", "upload_results": {"not_in_env": saved, \
-        "env_errs": rejected}})
-
-    return jsonify({"upload_id": folder_name, "message": f"Files saved to {folder_path}.", "upload_results": {"scores": scores, \
-        "saved": saved, "rejected": rejected, "errors": errors}})
+    folder_name = f"{id_}-{str(time.time())[-5:]}"
 
 
+    scores, saved, rejected, errors = assess_quality_and_save(request.files, folder_name)
+
+    if scores == 176:
+        return {"upload_results": None, "upload_code": 176, "upload_message": \
+            CODES_DICT[176], "system_errors": {"not_in_env": saved, "env_errs": rejected}}
+
+    return jsonify({"upload_results": {"folder_name": folder_name, "scores": scores, \
+        "saved": saved, "rejected": rejected, "errors": errors}, "upload_code": 119, "upload_message": \
+            CODES_DICT[119], "system_errors": None})
 
 
-@app.route('/upload_db', )
+@app.route('/upload_db', methods=["POST"])
 def upload_db():
-    id_folder = request.body['upload_id']
+    if 'form' not in request:
+        return jsonify({"result_code": 107, "result_message": CODES_DICT[107], "upload_results": None, "system_errors": None})
+
+    if len(set(['upload_id', 'name', 'delete_pickles', 'rebuild_db']).intersection(set(request.form.keys()))) != 4:
+        return jsonify({"result_code": 108, "result_message": CODES_DICT[108], "upload_results": None, "system_errors": None})
+
+    id_folder = request.form['upload_id']
     id_ = id_folder.split("-")[0]
-    name = request.args['name']
-    delete_pickle = True if request.args['dp'] == 'True' else False
-    rebuild_db = True if request.args['rdb'] == 'True' else False
+    name = "_".join([n.lower() for n in request.form['name'].split(" ")])
+    delete_pickle = True if request.form['delete_pickles'].lower() == 'true' else False
+    rebuild_db = True if request.form['rebuild_db'].lower() == 'true' else False
 
-    if not re.match(r"{temp['ID_REGEX']}", id_) or not re.match("[a-z]+_[a-z]+", name):
-        return jsonify({"result": "Name and/or ID do not match pattern", "message": None, "pickle_message": None, \
-        "rebuild_db": None, "upload_results": None})
+    folder_path = os.path.join(temp['UPLOAD_FOLDER'], id_folder)
 
+    if os.path.exists(f"{folder_path}_UPLOADED_TO_DB"):
+        return jsonify({"result_code": 189, "result_message": CODES_DICT[189], \
+            "upload_results": None, "system_errors": None})
+      
+    id_re_code, not_in_env, env_errs = main_id_regex(id_)
 
-    folder_path = os.path.join(app.root_path, 'static', id_folder)
+    if id_re_code != 126:
+        return jsonify({"result_code": id_re_code, "result_message": CODES_DICT[id_re_code], \
+            "upload_results": None, "system_errors": {"not_in_env": not_in_env, "env_errs": env_errs}})
+    
+    
 
     if platform.system == "Windows":
         imgs = glob.glob(folder_path + r"\*.[pj][np]*")
     else: 
         imgs = glob.glob(f"{folder_path}/*.[pj][np]*")
 
-    result, message, message_pickle, rebuilt_db, res_main, res_aug = upload_to_db(imgs, id_, name, delete_pickle, rebuild_db)
+    message, message_pickle, rebuilt_db, res_main, res_aug, mysql_id = upload_to_db(imgs, id_, name, delete_pickle, rebuild_db)
 
-    if message == 128:
-        return jsonify({"result": "Sys error: env", "message": message, "pickle_message": None, \
-        "rebuild_db": None, "upload_results": {"not_in_env": result[0], "env_errs": result[1]}})
+    if message == 176:
+        return jsonify({"result_code": message, "result_message": CODES_DICT[message], \
+            "upload_results": None, "system_errors": {"not_in_env": res_main, "env_errs": res_aug}})
     
-    return jsonify({"result": result, "message": message, "pickle_message": message_pickle, \
-        "rebuild_db": rebuilt_db, "upload_results": {"res_main": res_main, "res_aug": res_aug}})
+    os.rename(folder_path, f"{folder_path}_UPLOADED_TO_DB")
 
+    return jsonify({"result_code": message, "result_message": CODES_DICT[message], \
+            "upload_results": {"mysql_id": mysql_id, "message_pickle": message_pickle, \
+                "rebuilt_db": rebuilt_db, "resulting_imgs": {"main": res_main, "aug": res_aug}}, "system_errors": None})
 
+   
 
-def run_app():
-    app.run(host='0.0.0.0', debug=True, use_reloader=False)
+    
+@app.route('/shutdown', methods=['GET'])
+def shutdown():
+    shutdown_server(request)
+    close_log_file()
+    return 'Server shutting down...'
 
 if __name__ == '__main__':    
-    threading.Thread(target=run_app).start()
+    app.run(host='0.0.0.0', port=8001, debug=True, use_reloader=False)

@@ -21,6 +21,7 @@ def verify_face(id_, img_paths):
         False, 116, None
 
     if not os.path.exists(path):
+        log_to_file("Path in the MySQL database doesn't exist in the image database.", "ERROR")
         return False, 113, None          
    
 
