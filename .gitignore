@@ -144,3 +144,6 @@ temp_
 .env_bu
 
 static/
+
+
+*.zip
