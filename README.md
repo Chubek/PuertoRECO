@@ -4,7 +4,7 @@ The following codebase is a face recognition toolkit. It consists of three endpo
 
 In this documentn we'll explain how this codebase works.
 
-**Jump to Section*:
+**Jump to Section**:
 - [Face Recognition System](#face-recognition-system)
   - [Endpoints API](#endpoints-api)
     - [Resulting Codes](#resulting-codes)
