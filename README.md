@@ -75,7 +75,7 @@ After upload to image DB is done, the folder will be renamed and it can't be use
 
 This endpoint will return the following results:
 
-|Parameter|Job|
+|Parameter|Yields|
 |---------|---|
 |recognition_code|Refer to [codes](#resulting-codes)|
 |recognition_message|Resulting message.|
