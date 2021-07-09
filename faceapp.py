@@ -91,6 +91,12 @@ def upload_verify():
         return {"upload_results": None, "upload_code": 176, "upload_message": \
             CODES_DICT[176], "system_errors": {"not_in_env": saved, "env_errs": rejected}}
 
+    if len(saved) == 0:
+        return jsonify({"upload_results": {"folder_name": None, "scores": scores, \
+        "saved": saved, "rejected": rejected, "errors": errors}, "upload_code": 120, "upload_message": \
+            CODES_DICT[120], "system_errors": None})
+
+
     return jsonify({"upload_results": {"folder_name": folder_name, "scores": scores, \
         "saved": saved, "rejected": rejected, "errors": errors}, "upload_code": 119, "upload_message": \
             CODES_DICT[119], "system_errors": None})

@@ -118,6 +118,7 @@ The API will return codes. These codes are stored in `codes_dict.py`. The `*_mes
 |108|Acceptable upload_db endpoint www-form-urlencoded keys| upload_id, name, delete_pickles, rebuild_db, in_place.|
 |109|Acceptable verify endpoint www-form-urlencoded keys| upload_id, skip_verify, skip_db_search, skip_liveness|
 |110|No args provided for upload_imgs endpoint, or id arg must be provided through upload_imgs?id=|
+|120|All the files were rejected due to not meeting score criteria.|
 
 
 ## Run Development Mode

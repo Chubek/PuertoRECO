@@ -7,6 +7,7 @@ CODES_DICT = {
     126: "Regex matched ID.",
     127: "Regex didn't match ID.",
     119: "Files uploaded successfully.",
+    120: "All the files were rejected due to not meeting score criteria.",
     117: "Length of uploaded files was zero.",
     155: "Database connection error. Consult log.",
     100: "None of the matching IDs in the DB matched what was given.",
