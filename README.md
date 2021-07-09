@@ -121,7 +121,6 @@ The API will return codes. These codes are stored in `codes_dict.py`. The `*_mes
 
 
 ## Run Development Mode
-
 For now, until I deploy this codebase to server and make a frontend for it, please test it by running it on your local machine. To do that:
 
 1. Install Mini Conda.
@@ -135,6 +134,9 @@ For now, until I deploy this codebase to server and make a frontend for it, plea
 9. Send requests.
 10. If you run into any problems contact either me (`Chubak#7400`), Szymon, or Felix.
 11. You may need to install dlib.
+
+You can use [this file](https://drive.google.com/uc?id=1W9nSCmkPNr41MeDErwJuY_0rMKabsuak) to test. This file is also used in unit tests.
+
 
 ### Environment Variables
 In order for this application to run, it requires a long list of environment variables. This file is validated, and if a key doesn't exist in it, or doesn't match the desired pattern, the endpoint will return `system_errors`. This key maps to two sub-keys, `not_in_env` which lists all the keys that are not in `.env` file, and `env_errs`, which contains all the errors generated from not matching the `.env` file. 
