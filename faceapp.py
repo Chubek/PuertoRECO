@@ -11,16 +11,13 @@ from dotenv import dotenv_values
 from codes_dict import CODES_DICT
 from scripts.utils.server_shutdown import shutdown_server
 from scripts.utils.log_to_file import close_log_file
-from flask_cors import CORS, cross_origin
 
 temp = dotenv_values(".env")
 
 app = Flask(__name__)
-cors = CORS(app)
-app.config['CORS_HEADERS'] = 'Content-Type'
+
     
 @app.route('/verify', methods=['POST'])
-@cross_origin()
 def verify():
     if len(request.form) == 0:
         return jsonify({"recognition_code": 107, "recognition_message": CODES_DICT[107], "recognition_results": None, "system_errors": None})
@@ -64,7 +61,6 @@ def verify():
 
 
 @app.route('/upload_imgs', methods=['POST'])
-@cross_origin()
 def upload_verify():
     if 'id' not in request.args:
         return {"upload_results": None, "upload_code": 110, "upload_message": \
@@ -107,7 +103,6 @@ def upload_verify():
 
 
 @app.route('/upload_db', methods=["POST"])
-@cross_origin()
 def upload_db():
     if len(request.form) == 0:
         return jsonify({"result_code": 107, "result_message": CODES_DICT[107], "upload_results": None, "system_errors": None})
@@ -154,12 +149,7 @@ def upload_db():
             "upload_results": {"mysql_id": mysql_id, "message_pickle": message_pickle, \
                 "rebuilt_db": rebuilt_db, "resulting_imgs": {"main": res_main, "aug": res_aug}}, "system_errors": None})
 
-   
-@app.after_request
-def after_request(response):
-    header = response.headers
-    header['Access-Control-Allow-Origin'] = '*'
-    return response
+
 
 if __name__ == '__main__':    
     app.run(host='0.0.0.0', port=8001, debug=True, use_reloader=False)
