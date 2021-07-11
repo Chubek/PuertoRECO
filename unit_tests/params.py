@@ -14,7 +14,7 @@ if not os.path.exists(file_name):
         os.makedirs(os.path.join(os.getcwd(), "test_imgs"))
 
     with zipfile.ZipFile(file_name) as zf:
-        zf.extract(os.path.join(os.getcwd(), "test_imgs"))
+        zf.extractall(os.path.join(os.getcwd(), "test_imgs"))
 
 
 make_path = lambda x: os.path.join(os.getcwd(), "test_imgs", *x)
