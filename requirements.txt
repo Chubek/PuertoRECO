@@ -14,3 +14,4 @@ from-root
 image-quality
 joblib
 tqdm
+flask-cors
