@@ -10,12 +10,12 @@ if not os.path.exists(file_name):
     url = 'https://drive.google.com/uc?id=1W9nSCmkPNr41MeDErwJuY_0rMKabsuak'
     gdown.download(url, file_name, quiet=False)
 
-    if not os.path.exists(os.path.join(os.getcwd(), "test_imgs")):
+    
+if not os.path.exists(os.path.join(os.getcwd(), "test_imgs")):
         os.makedirs(os.path.join(os.getcwd(), "test_imgs"))
 
-    with zipfile.ZipFile(file_name) as zf:
-        zf.extractall(os.path.join(os.getcwd(), "test_imgs"))
-
+        with zipfile.ZipFile(file_name) as zf:
+            zf.extractall(os.path.join(os.getcwd(), "test_imgs"))
 
 make_path = lambda x: os.path.join(os.getcwd(), "test_imgs", *x)
 
