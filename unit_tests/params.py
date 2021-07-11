@@ -17,7 +17,7 @@ if not os.path.exists(os.path.join(os.getcwd(), "test_imgs")):
         with zipfile.ZipFile(file_name) as zf:
             zf.extractall(os.path.join(os.getcwd(), "test_imgs"))
 
-make_path = lambda x: os.path.join(os.getcwd(), "test_imgs", *x)
+make_path = lambda x: os.path.join(os.getcwd(), "test_imgs", "test_imgs", *x)
 
 
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
