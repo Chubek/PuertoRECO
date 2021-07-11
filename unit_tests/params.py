@@ -29,7 +29,7 @@ env_file_renamed = os.path.join(parentdir, "temp_")
 sys.path.insert(0, parentdir) 
 
 DB_IMGS = [make_path(['rock_train', '1.jpg']), make_path(['rock_train', '2.png']), make_path(['rock_train', '3.jpg'])]
-DB_NON_EXISTENT_MIX = [make_path(['doesntexist', 'doesntexist.jpg'], make_path(['rock_test', '1.jpg']]
+DB_NON_EXISTENT_MIX = [make_path(['doesntexist', 'doesntexist.jpg']), make_path(['rock_test', '1.jpg'])]
 TEST_IMGS = [make_path(['rock_test', '1.jpg']), make_path(['rock_test', '2.png']), \
     make_path(['rock_test', '3.png'])]
 MULTI_IMG_DB = [make_path(['imgs_mulit', 'diesel_rock.png']), make_path(['imgs_mulit', 'rock_diesel2.png'])]
