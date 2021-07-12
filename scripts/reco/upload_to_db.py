@@ -209,6 +209,6 @@ def main_upload(img_paths, id_, name, delete_pickle, rebuild_db, in_place):
         log_to_file("Successfully inserted into MySQL...", "SUCCESS")
     except:
         log_to_file("Insert into MySQL failed. Please check your settings.", "FAILURE")
-        return 150, None, None, res_main, res_aug
+        return 150, None, None, res_main, res_aug, None
 
     return message, message_pickle, rebuilt_db, res_main, res_aug, id_db
