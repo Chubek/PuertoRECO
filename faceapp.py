@@ -151,7 +151,8 @@ def upload_db():
         return jsonify({"result_code": message, "result_message": CODES_DICT[message], \
             "upload_results": None, "system_errors": {"not_in_env": res_main, "env_errs": res_aug}})
     
-    os.rename(folder_path, f"{folder_path}_UPLOADED_TO_DB")
+    if os.path.exists(folder_path):
+        os.rename(folder_path, f"{folder_path}_UPLOADED_TO_DB")
 
     return jsonify({"result_code": message, "result_message": CODES_DICT[message], \
             "upload_results": {"mysql_id": mysql_id, "message_pickle": message_pickle, \
