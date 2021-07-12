@@ -37,8 +37,8 @@ def verify():
 
     folder_path = os.path.join(os.getcwd(), temp['UPLOAD_FOLDER'], id_folder)
     log_to_file(f"Checking if folder {folder_path} exists, or is uploaded before.")
-    if os.path.exists(f"{folder_path}_UPLOADED_TO_DB"):
-        log_to_file(f"Folder {folder_path} has been uploaded before.", "ERROR")
+    if os.path.exists(f"{folder_path}_UPLOADED_TO_DB") or not os.path.exists(folder_path):
+        log_to_file(f"Folder {folder_path} does not exist has been uploaded before.", "ERROR")
         return jsonify({"recognition_code": 189, "recognition_message": CODES_DICT[189], "recognition_results": None, "system_errors": None})
 
 
@@ -127,8 +127,8 @@ def upload_db():
 
     folder_path = os.path.join(os.getcwd(), temp['UPLOAD_FOLDER'], id_folder)
     log_to_file(f"Checking if folder {folder_path} exists, or is uploaded before.")
-    if os.path.exists(f"{folder_path}_UPLOADED_TO_DB"):
-        log_to_file(f"Folder {folder_path} has been uploaded before.", "ERROR")
+    if os.path.exists(f"{folder_path}_UPLOADED_TO_DB") or not os.path.exists(folder_path):
+        log_to_file(f"Folder {folder_path} doesn't exist or has been uploaded before.", "ERROR")
         return jsonify({"result_code": 189, "result_message": CODES_DICT[189], \
             "upload_results": None, "system_errors": None})
       

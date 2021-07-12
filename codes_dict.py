@@ -25,10 +25,10 @@ CODES_DICT = {
     838: "ID successfully inserted into DB. in_place was needlessly enabled.",
     800: "ID successfully inserted to db.",
     850: "ID successfully inserted to db. in_place was disabled, so the files were added to the previous ones.",
-    189: "Folder already uploaded to DB. Can't verify to upload again.",
+    189: "Folder already uploaded to DB. Can't verify to upload again. Or it does not exist at all!",
     107: "Endpoint request needs to be www-form-urlencoded, or form is empty.",
     108: "Acceptable upload_db endpoint www-form-urlencoded keys: upload_id, name, delete_pickles, rebuild_db, in_place.",
     109: "Acceptable verify endpoint www-form-urlencoded keys: upload_id, skip_verify, skip_db_search, skip_liveness",
-    110: "No args provided for upload_imgs endpoint, or id arg must be provided through upload_imgs?id="
+    110: "No args provided for upload_imgs endpoint, or id arg must be provided through upload_imgs?id=",
 
 }
