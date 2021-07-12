@@ -184,13 +184,15 @@ def assess_quality_and_save(uploaded_images, folder_id):
 
 def main_id_regex(id_):
     pattern, code, not_in_env, env_errs = validate_id_regex(os.getcwd())
-
+    log_to_file(rf"Matching ID {id_} with pattern {pattern}.")
     if code == 176:
         return code, not_in_env, env_errs
 
     
     if re.match(rf"{pattern}", id_):
+        log_to_file("Pattern matched.")
         return 126, None, None
-
+        
+    log_to_file("Pattern did not match.")
     return 127, None, None
 

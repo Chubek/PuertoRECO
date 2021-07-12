@@ -11,13 +11,16 @@ from dotenv import dotenv_values
 from codes_dict import CODES_DICT
 from scripts.utils.server_shutdown import shutdown_server
 from scripts.utils.log_to_file import close_log_file
+from flask_cors import CORS, cross_origin
 
 temp = dotenv_values(".env")
 
 app = Flask(__name__)
-
+cors = CORS(app)
+app.config['CORS_HEADERS'] = 'Content-Type'
     
 @app.route('/verify', methods=['POST'])
+@cross_origin()
 def verify():
     if len(request.form) == 0:
         return jsonify({"recognition_code": 107, "recognition_message": CODES_DICT[107], "recognition_results": None, "system_errors": None})
@@ -32,8 +35,10 @@ def verify():
     skip_db_search = True if request.form['skip_db_search'].lower() == "true" else False
     skip_liveness = True if request.form['skip_liveness'].lower() == "true" else False
 
-    folder_path = os.path.join(temp['UPLOAD_FOLDER'], id_folder)
+    folder_path = os.path.join(os.getcwd(), temp['UPLOAD_FOLDER'], id_folder)
+    log_to_file(f"Checking if folder {folder_path} exists, or is uploaded before.")
     if os.path.exists(f"{folder_path}_UPLOADED_TO_DB"):
+        log_to_file(f"Folder {folder_path} has been uploaded before.", "ERROR")
         return jsonify({"recognition_code": 189, "recognition_message": CODES_DICT[189], "recognition_results": None, "system_errors": None})
 
 
@@ -61,6 +66,7 @@ def verify():
 
 
 @app.route('/upload_imgs', methods=['POST'])
+@cross_origin()
 def upload_verify():
     if 'id' not in request.args:
         return {"upload_results": None, "upload_code": 110, "upload_message": \
@@ -103,6 +109,7 @@ def upload_verify():
 
 
 @app.route('/upload_db', methods=["POST"])
+@cross_origin()
 def upload_db():
     if len(request.form) == 0:
         return jsonify({"result_code": 107, "result_message": CODES_DICT[107], "upload_results": None, "system_errors": None})
@@ -118,9 +125,10 @@ def upload_db():
     in_place = True if request.form['in_place'].lower() == 'true' else False
 
 
-    folder_path = os.path.join(temp['UPLOAD_FOLDER'], id_folder)
-
+    folder_path = os.path.join(os.getcwd(), temp['UPLOAD_FOLDER'], id_folder)
+    log_to_file(f"Checking if folder {folder_path} exists, or is uploaded before.")
     if os.path.exists(f"{folder_path}_UPLOADED_TO_DB"):
+        log_to_file(f"Folder {folder_path} has been uploaded before.", "ERROR")
         return jsonify({"result_code": 189, "result_message": CODES_DICT[189], \
             "upload_results": None, "system_errors": None})
       
@@ -149,7 +157,12 @@ def upload_db():
             "upload_results": {"mysql_id": mysql_id, "message_pickle": message_pickle, \
                 "rebuilt_db": rebuilt_db, "resulting_imgs": {"main": res_main, "aug": res_aug}}, "system_errors": None})
 
-
+   
+@app.after_request
+def after_request(response):
+    header = response.headers
+    header['Access-Control-Allow-Origin'] = '*'
+    return response
 
 if __name__ == '__main__':    
     app.run(host='0.0.0.0', port=8001, debug=True, use_reloader=False)
