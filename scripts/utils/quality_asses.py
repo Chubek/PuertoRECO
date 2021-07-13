@@ -16,7 +16,7 @@ def asses_img_quality(img_bytes, tol):
 
         log_to_file(f"Assessment successful, got an score of: {score}", "SUCCESS")
 
-        if score >= tol:
+        if score <= tol:
             log_to_file(f"Score larger or equal to tolerance, returning success code.", "FINISH")
             return 119, score
         else:
