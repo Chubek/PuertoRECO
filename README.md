@@ -170,7 +170,7 @@ So create a file in the root called `.env` and make sure it contains the followi
 |SELECTED_MODELS|Face recognition models you wish to use. Can be VGG-Face, Facenet, OpenFace, DeepFace, DeepID, ArcFace or Dlib.|Facenet,ArcFace,VGG-Face|
 |ID_REGEX|The regex pattern for IDs.|RECO_ID_\d+|
 |NUM_AUG|Number of augmentations.|4|
-|SIM_FUNC|Distance function to use. Can be cosine, euclidean, or euclidean_l2|cosine|
+|SIM_FUNC|Distance function to use. Can be cosine, euclidean, or euclidean_l2. Note that some models, such as Facenet, don't work with Euclidean.|cosine|
 |LOG_LOC|Location to the log file. Can be non-existent.|I:\face_reco\faceapp.log|
 |VER_TOL|Real image verification tolerance. As in, how many real images need to be verified until the code returns true.|2|
 |VER_TOL_AUG|Same as above, but for augmented images.|20|
