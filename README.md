@@ -137,6 +137,14 @@ For now, until I deploy this codebase to server and make a frontend for it, plea
 
 You can use [this file](https://drive.google.com/uc?id=1W9nSCmkPNr41MeDErwJuY_0rMKabsuak) to test. This file is also used in unit tests.
 
+Note: Your table schema should look like this:
+```
+Columns: ID, RECO_ID, RECO_NAME, RECO_PATH
+Types: PK, VARCHAR(12), VARCHAR(200), VARCHAR(500)
+```
+
+Names of columns can change BUT THEIR ORDER CAN'T.
+
 
 ### Environment Variables
 In order for this application to run, it requires a long list of environment variables. This file is validated, and if a key doesn't exist in it, or doesn't match the desired pattern, the endpoint will return `system_errors`. This key maps to two sub-keys, `not_in_env` which lists all the keys that are not in `.env` file, and `env_errs`, which contains all the errors generated from not matching the `.env` file. 
