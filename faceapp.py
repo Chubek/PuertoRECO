@@ -77,6 +77,7 @@ def upload_verify():
     id_re_code, not_in_env, env_errs = main_id_regex(id_)
 
     if id_re_code != 126:
+        log_to_file("Aborting...", "FAILURE")
         return jsonify({"upload_results": None, "upload_code": id_re_code, "upload_message": \
             CODES_DICT[id_re_code], "system_errors": {"not_in_env": not_in_env, "env_errs": env_errs}})
 
@@ -90,7 +91,7 @@ def upload_verify():
     folder_name = f"{id_}-{str(time.time())[-5:]}"
 
 
-    scores, saved, rejected, errors = assess_quality_and_save(request.files, folder_name)
+    scores, saved, rejected, errors,  saved_as = assess_quality_and_save(request.files, folder_name)
 
     if scores == 176:
         return jsonify({"upload_results": None, "upload_code": 176, "upload_message": \
@@ -98,12 +99,12 @@ def upload_verify():
 
     if len(saved) == 0:
         return jsonify({"upload_results": {"folder_name": None, "scores": scores, \
-        "saved": saved, "rejected": rejected, "errors": errors}, "upload_code": 120, "upload_message": \
+        "saved": saved, "rejected": rejected, "errors": errors, "saved_as": None}, "upload_code": 120, "upload_message": \
             CODES_DICT[120], "system_errors": None})
 
 
     return jsonify({"upload_results": {"folder_name": folder_name, "scores": scores, \
-        "saved": saved, "rejected": rejected, "errors": errors}, "upload_code": 119, "upload_message": \
+        "saved": saved, "rejected": rejected, "errors": errors, "saved_as": saved_as}, "upload_code": 119, "upload_message": \
             CODES_DICT[119], "system_errors": None})
 
 

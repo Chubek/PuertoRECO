@@ -14,6 +14,8 @@ import os
 from scripts.utils.validate_env import validate_env, validate_score_tol, validate_id_regex
 from scripts.utils.quality_asses import asses_img_quality
 import re
+import random
+import string
 
 code_db, not_in_env_db, env_errs_db = connect_to_db()
 
@@ -135,7 +137,7 @@ def upload_to_db(imgs_path, id_, name, delete_pickle, rebuild_db, in_place, test
     return message, message_pickle, rebuilt_db, res_main, res_aug, mysql_id
 
 
-
+letters = string.ascii_lowercase
 
 def assess_quality_and_save(uploaded_images, folder_id):
     log_to_file(f"Assessing image quality for {len(uploaded_images)} uploaded images...", "INFO")
@@ -144,7 +146,7 @@ def assess_quality_and_save(uploaded_images, folder_id):
 
     if code == 176:
         log_to_file("Error with SCORE_TOL env var. Aborting...", "ERROR")  
-        return code, not_in_env, env_errs, None
+        return code, not_in_env, env_errs, None, None
 
     log_to_file(f"Score tolerance is {temp['SCORE_TOL']}.", "INFO")
 
@@ -152,7 +154,7 @@ def assess_quality_and_save(uploaded_images, folder_id):
     saved = []
     rejected = []
     errors = []
-
+    saved_as = []
     for u_img in uploaded_images.values():
         log_to_file(f"Operating on image {u_img.filename}...", "INFO")
         status, score = asses_img_quality(u_img.read(), temp['SCORE_TOL'])
@@ -166,7 +168,10 @@ def assess_quality_and_save(uploaded_images, folder_id):
                     os.makedirs(save_path)
                 
                 u_img.seek(0)
-                u_img.save(os.path.join(save_path, u_img.filename))
+                name, ext = u_img.filename.split(".")[0], u_img.filename.split(".")[1]
+                name_hash = f"{name}_{''.join(random.choice(letters) for i in range(10))}.{ext}"
+                u_img.save(os.path.join(save_path, name_hash))
+                saved_as.append(os.path.join(save_path, name_hash))
                 log_to_file(f"Image saved to {os.path.join(save_path, u_img.filename)}.", "SUCCESS")
                 saved.append(u_img.filename)
 
@@ -180,7 +185,7 @@ def assess_quality_and_save(uploaded_images, folder_id):
 
     log_to_file(f'Scores: {scores}', "INFO")
 
-    return scores, saved, rejected, errors
+    return scores, saved, rejected, errors, saved_as
 
 def main_id_regex(id_):
     pattern, code, not_in_env, env_errs = validate_id_regex(os.getcwd())
