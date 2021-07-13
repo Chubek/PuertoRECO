@@ -69,8 +69,7 @@ def verify():
 @cross_origin()
 def upload_verify():
     if 'id' not in request.args:
-        return {"upload_results": None, "upload_code": 110, "upload_message": \
-            CODES_DICT[110], "system_errors": None}
+        return jsonify({"upload_results": None, "upload_code": 110, "upload_message": CODES_DICT[110], "system_errors": None})
 
     id_ = request.args['id']
 
@@ -78,15 +77,15 @@ def upload_verify():
     id_re_code, not_in_env, env_errs = main_id_regex(id_)
 
     if id_re_code != 126:
-        return {"upload_results": None, "upload_code": id_re_code, "upload_message": \
-            CODES_DICT[id_re_code], "system_errors": {"not_in_env": not_in_env, "env_errs": env_errs}}
+        return jsonify({"upload_results": None, "upload_code": id_re_code, "upload_message": \
+            CODES_DICT[id_re_code], "system_errors": {"not_in_env": not_in_env, "env_errs": env_errs}})
 
 
     files = request.files
 
     if len(files) == 0:
-        return {"upload_results": None, "upload_code": 117, "upload_message": \
-            CODES_DICT[117], "system_errors": None}
+        return jsonify({"upload_results": None, "upload_code": 117, "upload_message": \
+            CODES_DICT[117], "system_errors": None})
 
     folder_name = f"{id_}-{str(time.time())[-5:]}"
 
@@ -94,8 +93,8 @@ def upload_verify():
     scores, saved, rejected, errors = assess_quality_and_save(request.files, folder_name)
 
     if scores == 176:
-        return {"upload_results": None, "upload_code": 176, "upload_message": \
-            CODES_DICT[176], "system_errors": {"not_in_env": saved, "env_errs": rejected}}
+        return jsonify({"upload_results": None, "upload_code": 176, "upload_message": \
+            CODES_DICT[176], "system_errors": {"not_in_env": saved, "env_errs": rejected}})
 
     if len(saved) == 0:
         return jsonify({"upload_results": {"folder_name": None, "scores": scores, \
