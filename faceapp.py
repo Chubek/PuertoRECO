@@ -12,6 +12,8 @@ from codes_dict import CODES_DICT
 from scripts.utils.server_shutdown import shutdown_server
 from scripts.utils.log_to_file import close_log_file
 from flask_cors import CORS, cross_origin
+import base64
+from datetime import datetime
 
 temp = dotenv_values(".env")
 
@@ -64,6 +66,39 @@ def verify():
 
     return jsonify({"recognition_code": code, "recognition_message": CODES_DICT[code], "recognition_results": {"name": name, "distance": distance}, "system_errors": None})
 
+
+@app.route('/upload_imgs_b64', methods=['GET'])
+@cross_origin()
+def upload_b64():
+    b64 = request.args['b64']
+    id_ = request.args['id']
+
+    id_re_code, not_in_env, env_errs = main_id_regex(id_)
+
+    if id_re_code != 126:
+        log_to_file("Aborting...", "FAILURE")
+        return jsonify({"upload_results": None, "upload_code": id_re_code, "upload_message": \
+            CODES_DICT[id_re_code], "system_errors": {"not_in_env": not_in_env, "env_errs": env_errs}})
+
+
+    folder_name = f"{id_}-b64-{datetime.now().hour}"
+
+    save_dir = os.path.join(temp["UPLOAD_FOLDER"], folder_name)
+
+    file_saved = os.path.join(save_dir, f"{random.randint(-10000, 10000)}.jpg")
+
+    while os.path.exists(file_saved):
+        file_saved = os.path.join(save_dir, f"{random.randint(-10000, 10000)}.jpg")
+
+    try:
+        with open(file_saved, "wb") as fh:
+            fh.write(base64.decodebytes(b64.encode()))
+    except:
+        return jsonify({"upload_results": None, "upload_code": 193, "upload_message": \
+            CODES_DICT[193], "system_errors": None})
+
+    return jsonify({"upload_results": {"file_path": file_saved}, "upload_code": 119, "upload_message": \
+            CODES_DICT[119], "system_errors": None})
 
 @app.route('/upload_imgs', methods=['POST'])
 @cross_origin()

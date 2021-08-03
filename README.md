@@ -119,6 +119,7 @@ The API will return codes. These codes are stored in `codes_dict.py`. The `*_mes
 |109|Acceptable verify endpoint www-form-urlencoded keys| upload_id, skip_verify, skip_db_search, skip_liveness|
 |110|No args provided for upload_imgs endpoint, or id arg must be provided through upload_imgs?id=|
 |120|All the files were rejected due to not meeting score criteria.|
+|193|There was a problem with base64 string.|
 
 ## Run Development Mode
 For now, until I deploy this codebase to server and make a frontend for it, please test it by running it on your local machine. To do that:
