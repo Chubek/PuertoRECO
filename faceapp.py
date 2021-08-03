@@ -67,7 +67,7 @@ def verify():
     return jsonify({"recognition_code": code, "recognition_message": CODES_DICT[code], "recognition_results": {"name": name, "distance": distance}, "system_errors": None})
 
 
-@app.route('/upload_imgs_b64', methods=['GET'])
+@app.route('/upload_imgs_b64', methods=['POST'])
 @cross_origin()
 def upload_b64():
     b64 = request.args['b64']
@@ -97,7 +97,7 @@ def upload_b64():
         return jsonify({"upload_results": None, "upload_code": 193, "upload_message": \
             CODES_DICT[193], "system_errors": None})
 
-    return jsonify({"upload_results": {"file_path": file_saved}, "upload_code": 119, "upload_message": \
+    return jsonify({"upload_results": {"file_path": file_saved, "folder_name": folder_name}, "upload_code": 119, "upload_message": \
             CODES_DICT[119], "system_errors": None})
 
 @app.route('/upload_imgs', methods=['POST'])
