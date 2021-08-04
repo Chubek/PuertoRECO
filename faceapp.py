@@ -15,7 +15,7 @@ from scripts.utils.log_to_file import close_log_file
 from flask_cors import CORS, cross_origin
 from datetime import datetime
 import base64
-from scripts.utils.decode_img import save_b64_as_png
+from scripts.utils.generate_id import generate_random_str
 
 temp = dotenv_values(".env")
 
@@ -69,43 +69,6 @@ def verify():
     return jsonify({"recognition_code": code, "recognition_message": CODES_DICT[code], "recognition_results": {"name": name, "distance": distance}, "system_errors": None})
 
 
-@app.route('/upload_imgs_b64', methods=['POST'])
-@cross_origin()
-def upload_b64():
-    data = request.form['b64']
-    id_ = request.args['id']
-    print(len(data))
-    id_re_code, not_in_env, env_errs = main_id_regex(id_)
-
-    if id_re_code != 126:
-        log_to_file("Aborting...", "FAILURE")
-        return jsonify({"upload_results": None, "upload_code": id_re_code, "upload_message": \
-            CODES_DICT[id_re_code], "system_errors": {"not_in_env": not_in_env, "env_errs": env_errs}})
-
-
-    folder_name = f"{id_}-b64-{datetime.now().hour}"
-    
-
-    save_dir = os.path.join(temp["UPLOAD_FOLDER"], folder_name)
-
-    if not os.path.exists(save_dir):
-        os.makedirs(save_dir)
-
-    file_saved = os.path.join(save_dir, f"{random.randint(-10000, 10000)}.png")
-
-    while os.path.exists(file_saved):
-        file_saved = os.path.join(save_dir, f"{random.randint(-10000, 10000)}.png")
-
-    #try:
-    with open("imageToSave.png", "wb") as fh:
-        fh.write(base64.urlsafe_b64decode(data + "==="))
-    #except:
-      #  return jsonify({"upload_results": None, "upload_code": 193, "upload_message": \
-      #      CODES_DICT[193], "system_errors": None})
-
-    return jsonify({"upload_results": {"file_path": file_saved, "folder_name": folder_name}, "upload_code": 119, "upload_message": \
-            CODES_DICT[119], "system_errors": None})
-
 @app.route('/upload_imgs', methods=['POST'])
 @cross_origin()
 def upload_verify():
@@ -143,7 +106,7 @@ def upload_verify():
             CODES_DICT[120], "system_errors": None})
 
 
-    return jsonify({"upload_results": {"folder_name": folder_name, "scores": scores, \
+    return jsonify({"upload_results": {"random_str": generate_random_str(), "folder_name": folder_name, "scores": scores, \
         "saved": saved, "rejected": rejected, "errors": errors, "saved_as": saved_as}, "upload_code": 119, "upload_message": \
             CODES_DICT[119], "system_errors": None})
 
