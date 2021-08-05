@@ -32,7 +32,7 @@ async def print_message(sid, message):
 
     if frame == "end":
         framenum[frame['id']] = 0
-        make_video(os.path.join(temp['TEMP_VIDEO_PATH'], frame['id']), os.path.join(temp['FINAL_VIDEO_PATH'], frame['id']))
+        make_video(os.path.join(temp['TEMP_VIDEO_PATH'], frame['id']), os.path.join(temp['FINAL_VIDEO_PATH'], frame['id'], f"{frame['id']}.avi"))
 
 app.router.add_get('/', index)
 
