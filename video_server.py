@@ -14,7 +14,7 @@ app = web.Application()
 sio.attach(app)
 
 async def index(request):
-    with open('index.html') as f:
+    with open(os.path.join(os.getcwd(), "frontend", "index.html")) as f:
         return web.Response(text=f.read(), content_type='text/html')
 
 
