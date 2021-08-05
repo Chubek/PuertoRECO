@@ -1,4 +1,4 @@
-from livenessapp import app
+from faceapp import app
 
 if __name__ == "__main__":
     app.run()
