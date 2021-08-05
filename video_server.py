@@ -4,7 +4,6 @@ from dotenv import dotenv_values
 from scripts.utils.decode_img import save_bytes_as_png, make_video
 import os
 import json
-import asyncio
 
 temp = dotenv_values(".env")
 framenum = {}
