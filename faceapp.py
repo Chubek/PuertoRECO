@@ -16,6 +16,7 @@ from flask_cors import CORS, cross_origin
 from datetime import datetime
 import base64
 from scripts.utils.generate_id import generate_random_str
+from scripts.utils.validate_env import validate_video_temp
 
 temp = dotenv_values(".env")
 
@@ -161,7 +162,10 @@ def upload_db():
             "upload_results": {"mysql_id": mysql_id, "message_pickle": message_pickle, \
                 "rebuilt_db": rebuilt_db, "resulting_imgs": {"main": res_main, "aug": res_aug}}, "system_errors": None})
 
-   
+
+  
+
+
 @app.after_request
 def after_request(response):
     header = response.headers

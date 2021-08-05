@@ -15,3 +15,5 @@ image-quality
 joblib
 tqdm
 flask-cors
+python-socketio
+aiohttp

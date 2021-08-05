@@ -365,3 +365,45 @@ def validate_score_tol(script_root):
         return {"SCORE_TOL": float(temp['SCORE_TOL']), "UPLOAD_FOLDER": temp['UPLOAD_FOLDER']}, 175, True, True
 
     return False, 176, not_in_env, env_errs
+
+
+def validate_video_temp(script_root):
+    log_to_file("Validating .env file and VIDEO_TEMP_PATH...", "INFO")
+
+    env_file = os.path.join(script_root, ".env")
+
+    env_errs, not_in_env = [], []
+    
+    if not os.path.exists(env_file):
+        log_to_file(f"ENV file {env_file} does not exist. Aborting...", "ERROR")
+        return False, ["Error reading .env: file doesn't exist."], ["Error reading .env: file doesn't exist."]
+
+    temp = dotenv_values(".env")
+
+
+    if 'VIDEO_TEMP_PATH' in temp:
+        if temp['VIDEO_TEMP_PATH'] == '' or not os.path.isdir(temp['VIDEO_TEMP_PATH']):
+            log_to_file("Env file configured incorrectly: VIDEO_TEMP_PATH is empty string or is not a path.", "ERROR")
+            env_errs.append("Env file configured incorrectly: VIDEO_TEMP_PATH is empty string or is noth a path.")
+        
+    else:
+        log_to_file("VIDEO_TEMP_PATH is not in .env", "ERROR")
+        not_in_env.append("VIDEO_TEMP_PATH")
+
+    if 'FINAL_VIDEO_PATH' in temp:
+        if temp['FINAL_VIDEO_PATH'] == '' or not os.path.isdir(temp['FINAL_VIDEO_PATH']):
+            log_to_file("Env file configured incorrectly: FINAL_VIDEO_PATH is empty string or is not a path.", "ERROR")
+            env_errs.append("Env file configured incorrectly: FINAL_VIDEO_PATH is empty string or is noth a path.")
+        
+    else:
+        log_to_file("FINAL_VIDEO_PATH is not in .env", "ERROR")
+        not_in_env.append("FINAL_VIDEO_PATH")
+
+    if len(not_in_env) == 0 and len(env_errs) == 0:
+        if not os.path.exists(temp['VIDEO_TEMP_PATH']):
+            os.makedirs(temp['VIDEO_TEMP_PATH'])
+        if not os.path.exists(temp['FINAL_VIDEO_PATH']):
+            os.makedirs(temp['FINAL_VIDEO_PATH'])
+        return (temp['VIDEO_TEMP_PATH'], temp['FINAL_VIDEO_PATH']), 175, True, True
+
+    return False, 176, not_in_env, env_errs
