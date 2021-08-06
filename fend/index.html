@@ -293,7 +293,7 @@ const submitTakenPictures = (button) => {
             var id = $("#id").val();          
                 
             $.ajax({
-                url: 'http://reco.filesdna.com/api/upload_imgs?id=' + id,
+                url: 'https://reco.filesdna.com/api/upload_imgs?id=' + id,
                 type: 'POST',
                 data: formData,
                 async: false,
