@@ -110,6 +110,8 @@
             <video id="preview" width="160" height="120" autoplay muted></video>
            
     <script>
+          var formData = new FormData();
+    var picturesTaken = 0;
         (function() {
   // The width and height of the captured photo. We will set the
   // width to the value defined here, but the height will be
@@ -258,8 +260,7 @@ stopButton.addEventListener("click", function() {
   // format data URL. By drawing it on an offscreen canvas and then
   // drawing that to the screen, we can change its size and/or apply
   // other changes before drawing it.
-  var formData = new FormData();
-  var picturesTaken = 0;
+
 
   function takepicture() {
     var context = canvas.getContext('2d');
@@ -306,6 +307,7 @@ const submitTakenPictures = (button) => {
                     $("#upload-response-div").html(JSON.stringify(response));
                     picturesTaken = 0;
                     document.getElementById("picTaken").innerHTML = picturesTaken;
+                    button.innerHTML = "Submit Taken Pictures";
             }
         });
 
