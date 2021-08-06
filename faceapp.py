@@ -16,7 +16,7 @@ from flask_cors import CORS, cross_origin
 from datetime import datetime
 import base64
 from scripts.utils.generate_id import generate_random_str
-from scripts.utils.validate_env import validate_video_temp
+
 
 temp = dotenv_values(".env")
 
