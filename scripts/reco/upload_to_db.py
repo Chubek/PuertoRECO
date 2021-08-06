@@ -1,6 +1,5 @@
 from dotenv import dotenv_values
 from numpy.lib.npyio import save
-import pymongo 
 from mtcnn import MTCNN
 import cv2
 import imgaug as ia
