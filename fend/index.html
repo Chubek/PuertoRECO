@@ -86,64 +86,201 @@
 </head>
 
 <body>
-    <div class="webcamClass" id="container">
-    
-   
-        <canvas id="canvas" class="d-none"></canvas>
 
-    
-    <div class="outer-container">
-        <div class="inner-container">
-            <div class="video-overlay">       <button id="controls" onclick=startWebcam() style="border: 0; background: transparent">
-                <img src="{{url_for('static', filename='webcam_clipart.png')}}" width="200" height="200" alt="submit" /></button> </div>
-    <video id="webcam" autoplay playsinline width="280" height="280"></video>
-    </div>
-    </div>
-   
-    
-          
-    <script src="https://cdn.socket.io/3.1.3/socket.io.min.js" integrity="sha384-cPwlPLvBTa3sKAgddT6krw0cJat7egBga3DJepJyrLl4Q9/5WLra3rrnMcyTyOnh" crossorigin="anonymous"></script>
+        <div class="camera">
+            <video id="video">Video stream not available.</video>
+            <button id="startbutton">Take photo</button> 
+            <button id="startrecordbutton">Record video</button>
+            <button id="stoprecordbutton">Stop record</button>
+            <a id="downloadButton">
+                Download Recorded Video
+              </a>
+          </div>
+          <canvas id="canvas">
+          </canvas>
+          <div class="output">
+            <img id="photo" alt="The screen capture will appear in this box."> 
+          </div>
+          <h2>Preview</h2>
+            <video id="preview" width="160" height="120" autoplay muted></video>
+            <p id="log">Will log here</p>
     <script>
-        
-        const webcamElement = document.getElementById('webcam');
-        const canvasElement = document.getElementById('canvas');
-        const webcam = new Webcam(webcamElement, 'user', canvasElement);
-        const startWebcam = () => {
-            webcam.start()
-            .then(result =>{
-                console.log("webcam started");
-            })
-            .catch(err => {
-                console.log(err);
-            });
-        }
+        (function() {
+  // The width and height of the captured photo. We will set the
+  // width to the value defined here, but the height will be
+  // calculated based on the aspect ratio of the input stream.
 
-        const stopWebcam = () => {
-            webcam.stop()
+  var width = 320;    // We will scale the photo width to this
+  var height = 0;     // This will be computed based on the input stream
+
+  // |streaming| indicates whether or not we're currently streaming
+  // video from the camera. Obviously, we start at false.
+
+  var streaming = false;
+
+  // The various HTML elements we need to configure or control. These
+  // will be set by the startup() function.
+
+  var video = null;
+  var canvas = null;
+  var photo = null;
+  var startbutton = null;
+  let preview = document.getElementById("preview");
+    let recording = document.getElementById("video");
+    let startButton = document.getElementById("startrecordbutton");
+    let stopButton = document.getElementById("stoprecordbutton");
+    let downloadButton = document.getElementById("downloadButton");
+    let logElement = document.getElementById("log");
+    let recordingTimeMS = 5000;
+
+    function log(msg) {
+  logElement.innerHTML += msg + "\n";
+}
+
+function startRecording(stream, lengthInMS) {
+  let recorder = new MediaRecorder(stream);
+  let data = [];
+
+  recorder.ondataavailable = event => data.push(event.data);
+  recorder.start();
+  log(recorder.state + " for " + (lengthInMS/1000) + " seconds...");
+
+  let stopped = new Promise((resolve, reject) => {
+    recorder.onstop = resolve;
+    recorder.onerror = event => reject(event.name);
+  });
+
+  let recorded = wait(lengthInMS).then(
+    () => recorder.state == "recording" && recorder.stop()
+  );
+
+  return Promise.all([
+    stopped,
+    recorded
+  ])
+  .then(() => data);
+}
+startButton.addEventListener("click", function() {
+  navigator.mediaDevices.getUserMedia({
+    video: true,
+    audio: true
+  }).then(stream => {
+    preview.srcObject = stream;
+    downloadButton.href = stream;
+    preview.captureStream = preview.captureStream || preview.mozCaptureStream;
+    return new Promise(resolve => preview.onplaying = resolve);
+  }).then(() => startRecording(preview.captureStream(), recordingTimeMS))
+  .then (recordedChunks => {
+    let recordedBlob = new Blob(recordedChunks, { type: "video/webm" });
+    recording.src = URL.createObjectURL(recordedBlob);
+    downloadButton.href = recording.src;
+    downloadButton.download = "RecordedVideo.webm";
+
+    log("Successfully recorded " + recordedBlob.size + " bytes of " +
+        recordedBlob.type + " media.");
+  })
+  .catch(log);
+}, false);
+function stop(stream) {
+  stream.getTracks().forEach(track => track.stop());
+}
+
+stopButton.addEventListener("click", function() {
+  stop(preview.srcObject);
+}, false);
+
+
+  function startup() {
+    video = document.getElementById('video');
+    canvas = document.getElementById('canvas');
+    photo = document.getElementById('photo');
+    startbutton = document.getElementById('startbutton');
+
+    navigator.mediaDevices.getUserMedia({video: true, audio: false})
+    .then(function(stream) {
+      video.srcObject = stream;
+      video.play();
+    })
+    .catch(function(err) {
+      console.log("An error occurred: " + err);
+    });
+
+    video.addEventListener('canplay', function(ev){
+      if (!streaming) {
+        height = video.videoHeight / (video.videoWidth/width);
+      
+        // Firefox currently has a bug where the height can't be read from
+        // the video, so we will make assumptions if this happens.
+      
+        if (isNaN(height)) {
+          height = width / (4/3);
         }
-        var picturesTaken = 0;
-        var formData = new FormData();
-        function takePicture() {
-            var canvas = document.getElementById('canvas');
-            var b64Data = webcam.snap();
-            fetch(b64Data)
-                .then(res => {
-                    return res.blob();         
-            })
+      
+        video.setAttribute('width', width);
+        video.setAttribute('height', height);
+        canvas.setAttribute('width', width);
+        canvas.setAttribute('height', height);
+        streaming = true;
+      }
+    }, false);
+
+    startbutton.addEventListener('click', function(ev){
+      takepicture();
+      ev.preventDefault();
+    }, false);
+    
+    clearphoto();
+  }
+
+  // Fill the photo with an indication that none has been
+  // captured.
+
+  function clearphoto() {
+    var context = canvas.getContext('2d');
+    context.fillStyle = "#AAA";
+    context.fillRect(0, 0, canvas.width, canvas.height);
+
+    var data = canvas.toDataURL('image/png');
+    photo.setAttribute('src', data);
+  }
+  
+  // Capture a photo by fetching the current contents of the video
+  // and drawing it into a canvas, then converting that to a PNG
+  // format data URL. By drawing it on an offscreen canvas and then
+  // drawing that to the screen, we can change its size and/or apply
+  // other changes before drawing it.
+  var formData = new FormData();
+  var picturesTaken = 0;
+
+  function takepicture() {
+    var context = canvas.getContext('2d');
+    if (width && height) {
+      canvas.width = width;
+      canvas.height = height;
+      context.drawImage(video, 0, 0, width, height);
+        canvas.toBlob(blob => {
+            fetch(blob)
                 .then(blob => {
                     var blobUrl = URL.createObjectURL(blob);
                     document.getElementById("img1").setAttribute("src", blobUrl);
                     uploadedImageName = `myImage${picturesTaken}.png`;   
                     formData.append(`user_picture_${picturesTaken}`, blob, uploadedImageName);
-            });                     
+                    picturesTaken += 1;
+                } )                    
+            });
+      var data = canvas.toDataURL('image/png');
+      photo.setAttribute('src', data);
+    } else {
+      clearphoto();
+    }
+  }
 
-            picturesTaken += 1;
-
-            document.getElementById("picTaken").innerHTML = picturesTaken;
-        }
+  // Set up our event listener to run the startup process
+  // once loading is complete.
+  window.addEventListener('load', startup, false);
+})();
         
-        latestImage = 1;
-        const submitTakenPictures = (button) => {
+const submitTakenPictures = (button) => {
             button.value = "Wait...";            
             var id = $("#id").val();          
                 
@@ -164,59 +301,12 @@
         });
 
     }
-
-    const socket = io("http://localhost:8080");
-    let doLoop = false;
-    let id = $("#id").val();
-
-    const recordVideo = () => {
-        if (doLoop == false) {
-            socket.emit("video", JSON.stringify({"id": id, "frame": "start"}));
-
-            console.log("doLoop is false, starting recording.")
-            document.getElementById("rec").innerHTML = "Stop Recording";           
-            doLoop = true;
-
-            while (true) {  
-            console.log("Sending blob...")          
-            var b64Data = webcam.snap();
-            fetch(b64Data)
-                .then(res => {
-                    return res.blob();         
-                })
-            .then(blob => {
-                var blobUrl = URL.createObjectURL(blob);
-                document.getElementById("img1").setAttribute("src", blobUrl);
-                socket.emit("video", JSON.stringify({"id": id, "frame": blob}));
-            });            
-        }
-        }
-
-        else if (doLoop == true) {
-            console.log("Stopped recording...")
-            doLoop = false;
-            document.getElementById("rec").innerHTML = "Record Video";
-            socket.emit("video", JSON.stringify({"id": id, "frame": "end"}));
-        }
-
-        
-        
-    }
-
-    
-
-
-
-    
-        
-
     </script>
     <br>
     <div id="uploadDiv" class="uploadDiv">
         Enter ID: <input id="id" type="text" /><br>
         <b>Taken Pictures</b>: <p id="picTaken">0</p>
 
-        <button onclick="takePicture()">Take Picture</button><button id="rec" onclick="recordVideo()">Record Video</button><br><br>
 
         <button onclick="submitTakenPictures(this)">Submit Taken Pictures</button>
         
