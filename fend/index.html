@@ -1,0 +1,287 @@
+<html>
+
+<head>
+    <script type="text/javascript" src="https://unpkg.com/webcam-easy/dist/webcam-easy.min.js"></script>  
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <script src="https://raw.githubusercontent.com/eligrey/canvas-toBlob.js/master/canvas-toBlob.js"></script>  
+    <script src="script/scripts.js"></script>
+    <link rel='stylesheet' type='text/css' media='screen' href='https://reco.filesdna.com/spoof_images/webcam-demo.css'>
+    <title>Upload and Verify Images</title>
+
+    <style>
+        .headerText {color: red; 
+                    font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+                    margin-left: 15%;}
+        .resultText {color: rgb(233, 97, 97);
+                    font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;}
+        .buttonStart { border: 0;
+                        background: none;
+                        box-shadow: none;
+                        border-radius: 0px;
+                        background-color: blue;
+                        position: relative;
+                        margin-left: 55%;
+                        width: 8em;
+                        height: 2em;
+                        color: wheat;}
+        .buttonDelete { border: 0;
+                        background: none;
+                        box-shadow: none;
+                        border-radius: 0px;
+                        background-color: red;
+                        position: relative;
+                        margin-left: 10;
+                        width: 6em;
+                        height: 2em;
+                        color: wheat;}
+         .upForm {
+             margin-left: 15%;
+         } 
+
+ 
+         .outer-container {
+    border: 3px dotted black;
+    width: 100%;
+    height: 100%;
+    text-align: left;
+        }
+    .inner-container {
+        border: 1px solid black;
+        display: inline-block;
+        position: relative;
+    }
+    .video-overlay {
+        position: absolute;
+        left: 35%;
+        top: 35%;
+    }
+
+    .video-overlay:hover {
+        background: burlywood;
+    }
+
+    video {
+        width: 100%;
+        height: 100%;
+        border: 2px solid black;
+    }
+
+    #container {position: relative;}
+
+    .overlay {
+        display: block;
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        opacity: 50%;
+    }
+
+    .invisible {display: none;}
+    </style>
+
+</head>
+
+</head>
+
+<body>
+    <div class="webcamClass" id="container">
+    
+   
+        <canvas id="canvas" class="d-none"></canvas>
+
+    
+    <div class="outer-container">
+        <div class="inner-container">
+            <div class="video-overlay">       <button id="controls" onclick=startWebcam() style="border: 0; background: transparent">
+                <img src="{{url_for('static', filename='webcam_clipart.png')}}" width="200" height="200" alt="submit" /></button> </div>
+    <video id="webcam" autoplay playsinline width="280" height="280"></video>
+    </div>
+    </div>
+   
+    
+          
+    <script src="https://cdn.socket.io/3.1.3/socket.io.min.js" integrity="sha384-cPwlPLvBTa3sKAgddT6krw0cJat7egBga3DJepJyrLl4Q9/5WLra3rrnMcyTyOnh" crossorigin="anonymous"></script>
+    <script>
+        
+        const webcamElement = document.getElementById('webcam');
+        const canvasElement = document.getElementById('canvas');
+        const webcam = new Webcam(webcamElement, 'user', canvasElement);
+        const startWebcam = () => {
+            webcam.start()
+            .then(result =>{
+                console.log("webcam started");
+            })
+            .catch(err => {
+                console.log(err);
+            });
+        }
+
+        const stopWebcam = () => {
+            webcam.stop()
+        }
+        var picturesTaken = 0;
+        var formData = new FormData();
+        function takePicture() {
+            var canvas = document.getElementById('canvas');
+            var b64Data = webcam.snap();
+            fetch(b64Data)
+                .then(res => {
+                    return res.blob();         
+            })
+                .then(blob => {
+                    var blobUrl = URL.createObjectURL(blob);
+                    document.getElementById("img1").setAttribute("src", blobUrl);
+                    uploadedImageName = `myImage${picturesTaken}.png`;   
+                    formData.append(`user_picture_${picturesTaken}`, blob, uploadedImageName);
+            });                     
+
+            picturesTaken += 1;
+
+            document.getElementById("picTaken").innerHTML = picturesTaken;
+        }
+        
+        latestImage = 1;
+        const submitTakenPictures = (button) => {
+            button.value = "Wait...";            
+            var id = $("#id").val();          
+                
+            $.ajax({
+                url: 'http://10.8.0.2:8001/upload_imgs?id=' + id,
+                type: 'POST',
+                data: formData,
+                async: false,
+                cache: false,
+                contentType: false,
+                enctype: 'multipart/form-data',
+                processData: false,
+                success: function (response) {
+                        console.log("Got a response from /upload_imgs.")
+                        console.log(response);
+                    $("#upload-response-div").html(JSON.stringify(response));
+            }
+        });
+
+    }
+
+    const socket = io("http://localhost:8080");
+    let doLoop = false;
+    let id = $("#id").val();
+
+    const recordVideo = () => {
+        if (doLoop == false) {
+            socket.emit("video", JSON.stringify({"id": id, "frame": "start"}));
+
+            console.log("doLoop is false, starting recording.")
+            document.getElementById("rec").innerHTML = "Stop Recording";           
+            doLoop = true;
+
+            while (true) {  
+            console.log("Sending blob...")          
+            var b64Data = webcam.snap();
+            fetch(b64Data)
+                .then(res => {
+                    return res.blob();         
+                })
+            .then(blob => {
+                var blobUrl = URL.createObjectURL(blob);
+                document.getElementById("img1").setAttribute("src", blobUrl);
+                socket.emit("video", JSON.stringify({"id": id, "frame": blob}));
+            });            
+        }
+        }
+
+        else if (doLoop == true) {
+            console.log("Stopped recording...")
+            doLoop = false;
+            document.getElementById("rec").innerHTML = "Record Video";
+            socket.emit("video", JSON.stringify({"id": id, "frame": "end"}));
+        }
+
+        
+        
+    }
+
+    
+
+
+
+    
+        
+
+    </script>
+    <br>
+    <div id="uploadDiv" class="uploadDiv">
+        Enter ID: <input id="id" type="text" /><br>
+        <b>Taken Pictures</b>: <p id="picTaken">0</p>
+
+        <button onclick="takePicture()">Take Picture</button><button id="rec" onclick="recordVideo()">Record Video</button><br><br>
+
+        <button onclick="submitTakenPictures(this)">Submit Taken Pictures</button>
+        
+        <img src="" id="img1" />
+
+
+        <h5>You can later verify the results, or upload them to image DB.</h5>
+        
+
+
+        <p>Give the folder_id to verify or upload.</p>
+        <div id="upload-response-div" >Upload results will appear here</div>
+
+        <hr>
+
+        <strong>Option #1: Verify</strong><br>
+        Upload Id: <input type="text" id="uploadId1" /><br>
+
+        Skip Verification: <input type="radio" id="skipVerifyTrue" name="skipVerify" value="True">
+        <label for="skipVerifyTrue">True</label><br>
+        <input type="radio" id="skipVerifyTrue" name="skipVerify" value="False">
+        <label for="skipVerifyFalse">False</label><br>
+
+        Skip DB Search: <input type="radio" id="skipDbSearchTrue" name="skipDbSearch" value="True">
+        <label for="skipDbSearchTrue">True</label><br>
+        <input type="radio" id="skipDbSearchFalse" name="skipDbSearch" value="False">
+        <label for="skipDbSearchFalse">False</label><br>
+
+        Skip Liveness: <input type="radio" id="skipLivenessTrue" name="skipLiveness" value="True">
+        <label for="skipLivenessTrue">True</label><br>
+        <input type="radio" id="skipLivenessFalse" name="skipLiveness" value="False">
+        <label for="skipLivenessFalse">False</label><br>
+
+        <button onclick="submitVerify()">Verify!</button>
+
+        <div id="response-div-verify">Response will appear here</div>
+        <hr>
+        <strong>Option #2: Upload to DB</strong><br>
+        Upload Id: <input type="text" id="uploadId2" /><br>
+
+        Person Name: <input type="text" id="personName" /><br>
+
+        Delete Pickles: <input type="radio" id="deletePicklesTrue" name="deletePickles" value="True">
+        <label for="deletePicklesTrue">True</label><br>
+        <input type="radio" id="deletePicklesFalse" name="deletePickles" value="False">
+        <label for=deletePicklesFalse">False</label><br>
+
+        Rebuild DB: <input type="radio" id="rebuildDbTrue" name="rebuildDb" value="True">
+        <label for="rebuildDbTrue">True</label><br>
+        <input type="radio" id="rebuildDbFalse" name="rebuildDb" value="False">
+        <label for="rebuildDbFalse">False</label><br>
+
+        In Place: <input type="radio" id="inPlaceTrue" name="inPlace" value="True">
+        <label for="inPlaceTrue">True</label><br>
+        <input type="radio" id="inPlaceFalse" name="inPlace" value="False">
+        <label for="nPlaceFalse">False</label><br>
+
+        <button onclick="submitUploadToDb()">Upload to DB</button>
+
+        <div id="response-div-db">Response will appear here</div>
+
+
+    </div>
+    
+
+    </body>
+
+</html>
