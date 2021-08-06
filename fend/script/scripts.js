@@ -24,7 +24,7 @@ function submitVerify() {
     console.log(toUrlEncoded)
     $.ajax({
         type: 'POST',
-        url: "http://10.8.0.2:8001/verify",
+        url: "http://reco.filesdna.com/api/verify",
         headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
             'Accept-Encoding': 'deflate'
@@ -56,7 +56,7 @@ function submitUploadToDb() {
     console.log(toUrlEncoded)
     $.ajax({
         type: 'POST',
-        url: "http://10.8.0.2:8001/upload_db",
+        url: "http://reco.filesdna.com/api/upload_db",
         headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
             'Accept-Encoding': 'deflate'
@@ -77,7 +77,7 @@ function submitImages() {
     var id = $("#id").val();
     var formData = new FormData(document.getElementById("uploadForm"));
     $.ajax({
-        url: 'http://10.8.0.2:8001/upload_imgs?id=' + id,
+        url: 'http://reco.filesdna.com/api/upload_imgs?id=' + id,
         type: 'POST',
         data: formData,
         async: false,

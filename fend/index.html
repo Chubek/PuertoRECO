@@ -100,10 +100,15 @@
           </canvas>
           <div class="output">
             <img id="photo" alt="The screen capture will appear in this box."> 
+            Enter ID: <input id="id" type="text" /><br>
+            <b>Taken Pictures</b>: <p id="picTaken">0</p>
+
+            <button onclick="submitTakenPictures(this)">Submit Taken Pictures</button>
           </div>
+          <p id="log"></p>
           <h2>Preview</h2>
             <video id="preview" width="160" height="120" autoplay muted></video>
-            <p id="log">Will log here</p>
+           
     <script>
         (function() {
   // The width and height of the captured photo. We will set the
@@ -131,10 +136,13 @@
     let stopButton = document.getElementById("stoprecordbutton");
     let downloadButton = document.getElementById("downloadButton");
     let logElement = document.getElementById("log");
-    let recordingTimeMS = 5000;
+    let recordingTimeMS = 500000;
 
     function log(msg) {
   logElement.innerHTML += msg + "\n";
+}
+function wait(delayInMS) {
+  return new Promise(resolve => setTimeout(resolve, delayInMS));
 }
 
 function startRecording(stream, lengthInMS) {
@@ -160,6 +168,11 @@ function startRecording(stream, lengthInMS) {
   ])
   .then(() => data);
 }
+
+function stop(stream) {
+  stream.getTracks().forEach(track => track.stop());
+}
+
 startButton.addEventListener("click", function() {
   navigator.mediaDevices.getUserMedia({
     video: true,
@@ -181,14 +194,10 @@ startButton.addEventListener("click", function() {
   })
   .catch(log);
 }, false);
-function stop(stream) {
-  stream.getTracks().forEach(track => track.stop());
-}
-
 stopButton.addEventListener("click", function() {
   stop(preview.srcObject);
 }, false);
-
+          
 
   function startup() {
     video = document.getElementById('video');
@@ -258,16 +267,14 @@ stopButton.addEventListener("click", function() {
       canvas.width = width;
       canvas.height = height;
       context.drawImage(video, 0, 0, width, height);
-        canvas.toBlob(blob => {
-            fetch(blob)
-                .then(blob => {
-                    var blobUrl = URL.createObjectURL(blob);
-                    document.getElementById("img1").setAttribute("src", blobUrl);
+        canvas.toBlob(blob => {                
+
                     uploadedImageName = `myImage${picturesTaken}.png`;   
                     formData.append(`user_picture_${picturesTaken}`, blob, uploadedImageName);
                     picturesTaken += 1;
-                } )                    
-            });
+                    document.getElementById("picTaken").innerHTML = picturesTaken;
+        } )                    
+
       var data = canvas.toDataURL('image/png');
       photo.setAttribute('src', data);
     } else {
@@ -281,11 +288,11 @@ stopButton.addEventListener("click", function() {
 })();
         
 const submitTakenPictures = (button) => {
-            button.value = "Wait...";            
+            button.innerHTML = "Wait...";            
             var id = $("#id").val();          
                 
             $.ajax({
-                url: 'http://10.8.0.2:8001/upload_imgs?id=' + id,
+                url: 'http://reco.filesdna.com/api/upload_imgs?id=' + id,
                 type: 'POST',
                 data: formData,
                 async: false,
@@ -297,18 +304,15 @@ const submitTakenPictures = (button) => {
                         console.log("Got a response from /upload_imgs.")
                         console.log(response);
                     $("#upload-response-div").html(JSON.stringify(response));
+                    picturesTaken = 0;
+                    document.getElementById("picTaken").innerHTML = picturesTaken;
             }
         });
 
     }
     </script>
     <br>
-    <div id="uploadDiv" class="uploadDiv">
-        Enter ID: <input id="id" type="text" /><br>
-        <b>Taken Pictures</b>: <p id="picTaken">0</p>
-
-
-        <button onclick="submitTakenPictures(this)">Submit Taken Pictures</button>
+    <div id="uploadDiv" class="uploadDiv">        
         
         <img src="" id="img1" />
 
