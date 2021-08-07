@@ -109,7 +109,7 @@
           <p id="log"></p>
           <h2>Preview</h2>
             <video id="preview" width="160" height="120" autoplay muted></video>
-           
+            <canvas id="canvas-prev">
     <script>
           var formData = new FormData();
     var picturesTaken = 0;
@@ -140,7 +140,7 @@
     let downloadButton = document.getElementById("downloadButton");
     let logElement = document.getElementById("log");
     let recordingTimeMS = 500;
-
+/*
     function log(msg) {
   logElement.innerHTML += msg + "\n";
 }
@@ -200,7 +200,7 @@ startButton.addEventListener("click", function() {
 stopButton.addEventListener("click", function() {
   stop(preview.srcObject);
 }, false);
-          
+         */ 
 
   function startup() {
     video = document.getElementById('video');
@@ -210,6 +210,7 @@ stopButton.addEventListener("click", function() {
 
     navigator.mediaDevices.getUserMedia({video: true, audio: false})
     .then(function(stream) {
+      console.log(stream);
       video.srcObject = stream;
       video.play();
     })
@@ -262,16 +263,18 @@ stopButton.addEventListener("click", function() {
   // drawing that to the screen, we can change its size and/or apply
   // other changes before drawing it.
 
+  canvasPrev = document.getElementById("canvas-prev")
 
   function takepicture() {
-    var context = canvas.getContext('2d');
+    var context = canvasPrev.getContext('2d');
     if (width && height) {
-      canvas.width = width;
-      canvas.height = height;
+
+      canvasPrev.width = width;
+      canvasPrev.height = height;
       context.drawImage(video, 0, 0, width, height);
                   
 
-      var data = canvas.toDataURL('image/png');
+      var data = canvasPrev.toDataURL('image/png');
 
       photo.setAttribute('src', data);
 
@@ -282,6 +285,7 @@ stopButton.addEventListener("click", function() {
                     formData.append(`user_picture_${picturesTaken}`, blob, uploadedImageName);
                     picturesTaken += 1;
                     document.getElementById("picTaken").innerHTML = picturesTaken;
+
        
         })
     } else {
