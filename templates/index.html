@@ -95,6 +95,7 @@
             <a id="downloadButton">
                 Download Recorded Video
               </a>
+              <p id='recordedUrl'></p>
           </div>
           <canvas id="canvas">
           </canvas>
@@ -103,7 +104,7 @@
             Enter ID: <input id="id" type="text" /><br>
             <b>Taken Pictures</b>: <p id="picTaken">0</p>
 
-            <button onclick="submitTakenPictures(this)">Submit Taken Pictures</button>
+            <button id="submitButton" onclick="submitTakenPictures(this)">Submit Taken Pictures</button>
           </div>
           <p id="log"></p>
           <h2>Preview</h2>
@@ -190,7 +191,7 @@ startButton.addEventListener("click", function() {
     recording.src = URL.createObjectURL(recordedBlob);
     downloadButton.href = recording.src;
     downloadButton.download = "RecordedVideo.webm";
-
+    document.getElementById('recordedUrl').innerHTML = URL.createObjectURL(recordedBlob);
     log("Successfully recorded " + recordedBlob.size + " bytes of " +
         recordedBlob.type + " media.");
   })
@@ -309,7 +310,7 @@ const submitTakenPictures = (button) => {
                     $("#upload-response-div").html(JSON.stringify(response));
                     picturesTaken = 0;
                     document.getElementById("picTaken").innerHTML = picturesTaken;
-                    button.innerHTML = "Submit Taken Pictures";
+                    document.getElementById("submitButton").innerHTML = "Submit Taken Pictures";
             }
         });
 
