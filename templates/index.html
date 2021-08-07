@@ -280,6 +280,14 @@ stopButton.addEventListener("click", function() {
                     picturesTaken += 1;
                     document.getElementById("picTaken").innerHTML = picturesTaken;
                     clearphoto()
+                    navigator.mediaDevices.getUserMedia({video: true, audio: false})
+    .then(function(stream) {
+      video.srcObject = stream;
+      video.play();
+    })
+    .catch(function(err) {
+      console.log("An error occurred: " + err);
+    });
         })
       photo.setAttribute('src', data);
     } else {
