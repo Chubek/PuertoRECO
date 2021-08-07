@@ -6,7 +6,6 @@ from scripts.reco.verify_faces import verify_face
 from scripts.reco.upload_to_db import main_upload, save_imgs, verify_image
 from scripts.reco.prepare_img import prepare_img
 from scripts import *
-from scripts.database_op.db_op import connect_to_db
 from scripts.liveness.predict_label import *
 import functools
 import operator
