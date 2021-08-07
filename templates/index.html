@@ -109,7 +109,70 @@
           <p id="log"></p>
           <h2>Preview</h2>
             <video id="preview" width="160" height="120" autoplay muted></video>
-            <canvas id="canvas-prev">
+            <canvas id="canvas-prev"></canvas>
+              <br>
+              <div id="uploadDiv" class="uploadDiv">        
+                  
+                  <img src="" id="img1" />
+          
+          
+                  <h5>You can later verify the results, or upload them to image DB.</h5>
+                  
+          
+          
+                  <p>Give the folder_id to verify or upload.</p>
+                  <div id="upload-response-div" >Upload results will appear here</div>
+          
+                  <hr>
+          
+                  <strong>Option #1: Verify</strong><br>
+                  Upload Id: <input type="text" id="uploadId1" /><br>
+          
+                  Skip Verification: <input type="radio" id="skipVerifyTrue" name="skipVerify" value="True">
+                  <label for="skipVerifyTrue">True</label><br>
+                  <input type="radio" id="skipVerifyTrue" name="skipVerify" value="False">
+                  <label for="skipVerifyFalse">False</label><br>
+          
+                  Skip DB Search: <input type="radio" id="skipDbSearchTrue" name="skipDbSearch" value="True">
+                  <label for="skipDbSearchTrue">True</label><br>
+                  <input type="radio" id="skipDbSearchFalse" name="skipDbSearch" value="False">
+                  <label for="skipDbSearchFalse">False</label><br>
+          
+                  Skip Liveness: <input type="radio" id="skipLivenessTrue" name="skipLiveness" value="True">
+                  <label for="skipLivenessTrue">True</label><br>
+                  <input type="radio" id="skipLivenessFalse" name="skipLiveness" value="False">
+                  <label for="skipLivenessFalse">False</label><br>
+          
+                  <button onclick="submitVerify()">Verify!</button>
+          
+                  <div id="response-div-verify">Response will appear here</div>
+                  <hr>
+                  <strong>Option #2: Upload to DB</strong><br>
+                  Upload Id: <input type="text" id="uploadId2" /><br>
+          
+                  Person Name: <input type="text" id="personName" /><br>
+          
+                  Delete Pickles: <input type="radio" id="deletePicklesTrue" name="deletePickles" value="True">
+                  <label for="deletePicklesTrue">True</label><br>
+                  <input type="radio" id="deletePicklesFalse" name="deletePickles" value="False">
+                  <label for=deletePicklesFalse">False</label><br>
+          
+                  Rebuild DB: <input type="radio" id="rebuildDbTrue" name="rebuildDb" value="True">
+                  <label for="rebuildDbTrue">True</label><br>
+                  <input type="radio" id="rebuildDbFalse" name="rebuildDb" value="False">
+                  <label for="rebuildDbFalse">False</label><br>
+          
+                  In Place: <input type="radio" id="inPlaceTrue" name="inPlace" value="True">
+                  <label for="inPlaceTrue">True</label><br>
+                  <input type="radio" id="inPlaceFalse" name="inPlace" value="False">
+                  <label for="nPlaceFalse">False</label><br>
+          
+                  <button onclick="submitUploadToDb()">Upload to DB</button>
+          
+                  <div id="response-div-db">Response will appear here</div>
+          
+          
+              </div>
     <script>
           var formData = new FormData();
     var picturesTaken = 0;
@@ -140,7 +203,7 @@
     let downloadButton = document.getElementById("downloadButton");
     let logElement = document.getElementById("log");
     let recordingTimeMS = 500;
-/*
+
     function log(msg) {
   logElement.innerHTML += msg + "\n";
 }
@@ -200,7 +263,7 @@ startButton.addEventListener("click", function() {
 stopButton.addEventListener("click", function() {
   stop(preview.srcObject);
 }, false);
-         */ 
+      
 
   function startup() {
     video = document.getElementById('video');
@@ -443,69 +506,7 @@ function removeFile() {
 
 }
     </script>
-    <br>
-    <div id="uploadDiv" class="uploadDiv">        
-        
-        <img src="" id="img1" />
 
-
-        <h5>You can later verify the results, or upload them to image DB.</h5>
-        
-
-
-        <p>Give the folder_id to verify or upload.</p>
-        <div id="upload-response-div" >Upload results will appear here</div>
-
-        <hr>
-
-        <strong>Option #1: Verify</strong><br>
-        Upload Id: <input type="text" id="uploadId1" /><br>
-
-        Skip Verification: <input type="radio" id="skipVerifyTrue" name="skipVerify" value="True">
-        <label for="skipVerifyTrue">True</label><br>
-        <input type="radio" id="skipVerifyTrue" name="skipVerify" value="False">
-        <label for="skipVerifyFalse">False</label><br>
-
-        Skip DB Search: <input type="radio" id="skipDbSearchTrue" name="skipDbSearch" value="True">
-        <label for="skipDbSearchTrue">True</label><br>
-        <input type="radio" id="skipDbSearchFalse" name="skipDbSearch" value="False">
-        <label for="skipDbSearchFalse">False</label><br>
-
-        Skip Liveness: <input type="radio" id="skipLivenessTrue" name="skipLiveness" value="True">
-        <label for="skipLivenessTrue">True</label><br>
-        <input type="radio" id="skipLivenessFalse" name="skipLiveness" value="False">
-        <label for="skipLivenessFalse">False</label><br>
-
-        <button onclick="submitVerify()">Verify!</button>
-
-        <div id="response-div-verify">Response will appear here</div>
-        <hr>
-        <strong>Option #2: Upload to DB</strong><br>
-        Upload Id: <input type="text" id="uploadId2" /><br>
-
-        Person Name: <input type="text" id="personName" /><br>
-
-        Delete Pickles: <input type="radio" id="deletePicklesTrue" name="deletePickles" value="True">
-        <label for="deletePicklesTrue">True</label><br>
-        <input type="radio" id="deletePicklesFalse" name="deletePickles" value="False">
-        <label for=deletePicklesFalse">False</label><br>
-
-        Rebuild DB: <input type="radio" id="rebuildDbTrue" name="rebuildDb" value="True">
-        <label for="rebuildDbTrue">True</label><br>
-        <input type="radio" id="rebuildDbFalse" name="rebuildDb" value="False">
-        <label for="rebuildDbFalse">False</label><br>
-
-        In Place: <input type="radio" id="inPlaceTrue" name="inPlace" value="True">
-        <label for="inPlaceTrue">True</label><br>
-        <input type="radio" id="inPlaceFalse" name="inPlace" value="False">
-        <label for="nPlaceFalse">False</label><br>
-
-        <button onclick="submitUploadToDb()">Upload to DB</button>
-
-        <div id="response-div-db">Response will appear here</div>
-
-
-    </div>
     
 
     </body>
