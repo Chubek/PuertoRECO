@@ -17,15 +17,10 @@ import re
 import random
 import string
 
-code_db, not_in_env_db, env_errs_db = connect_to_db()
 
 
 
 def main_reco(img_paths, id_, test_title=None, skip_verify=False, skip_db_search=False, skip_liveness=False):
-    global code_db, not_in_env_db, env_errs_db
-
-    if code_db != 130:
-        return 155, not_in_env_db, env_errs_db
 
     test_str = "This is the real deal!" if not test_title else f"Test mode, test title: {test_title}"
     log_to_file(f"Starting recognition process with {len(img_paths)} images... {test_str}", "INFO")
@@ -106,10 +101,7 @@ def main_reco(img_paths, id_, test_title=None, skip_verify=False, skip_db_search
 
 
 def upload_to_db(imgs_path, id_, name, delete_pickle, rebuild_db, in_place, test_title=None):
-    global code_db, not_in_env_db, env_errs_db
-
-    if code_db != 130:
-        return 155, None, None, not_in_env_db, env_errs_db, None
+    global code_db, not_in_env_db, env_errs_db 
 
     test_str = "This is the real deal!" if not test_title else f"Test mode, test title: {test_title}"
     log_to_file(f"Starting upload to DB for id {id_} and name {name}... {test_str}", "INFO")
