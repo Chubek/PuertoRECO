@@ -279,6 +279,7 @@ stopButton.addEventListener("click", function() {
                     formData.append(`user_picture_${picturesTaken}`, blob, uploadedImageName);
                     picturesTaken += 1;
                     document.getElementById("picTaken").innerHTML = picturesTaken;
+                    clearphoto()
         })
       photo.setAttribute('src', data);
     } else {
