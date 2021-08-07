@@ -272,6 +272,9 @@ stopButton.addEventListener("click", function() {
                   
 
       var data = canvas.toDataURL('image/png');
+
+      photo.setAttribute('src', data);
+
       fetch(data)
         .then(res => {return res.blob()})
         .then(blob => {
@@ -279,17 +282,8 @@ stopButton.addEventListener("click", function() {
                     formData.append(`user_picture_${picturesTaken}`, blob, uploadedImageName);
                     picturesTaken += 1;
                     document.getElementById("picTaken").innerHTML = picturesTaken;
-                    clearphoto()
-                    navigator.mediaDevices.getUserMedia({video: true, audio: false})
-    .then(function(stream) {
-      video.srcObject = stream;
-      video.play();
-    })
-    .catch(function(err) {
-      console.log("An error occurred: " + err);
-    });
+       
         })
-      photo.setAttribute('src', data);
     } else {
       clearphoto();
     }
