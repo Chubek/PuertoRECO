@@ -138,7 +138,7 @@
     let stopButton = document.getElementById("stoprecordbutton");
     let downloadButton = document.getElementById("downloadButton");
     let logElement = document.getElementById("log");
-    let recordingTimeMS = 500000;
+    let recordingTimeMS = 5000;
 
     function log(msg) {
   logElement.innerHTML += msg + "\n";
@@ -274,7 +274,7 @@ stopButton.addEventListener("click", function() {
       fetch(data)
         .then(res => {return res.blob()})
         .then(blob => {
-                    uploadedImageName = `myImage${picturesTaken}.png`;   
+                  uploadedImageName = `myImage${picturesTaken}.png`;   
                     formData.append(`user_picture_${picturesTaken}`, blob, uploadedImageName);
                     picturesTaken += 1;
                     document.getElementById("picTaken").innerHTML = picturesTaken;
