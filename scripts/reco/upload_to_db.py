@@ -129,7 +129,7 @@ def main_upload(img_paths, id_, name, delete_pickle, rebuild_db, in_place):
         #img_det = verify_image(arrs[i - deleted])
 
         img_arr = arrs[i - deleted]
-        log_to_file(f"{img_arr}, "RESOURCE")
+        log_to_file(f"{img_arr}", "RESOURCE")
         detection = detector.detect_faces(img_arr)
         log_to_file(f"Detected {detection}", "DEBUG")
         if len(detection) == 0 or len(detection) > 1:
