@@ -4,7 +4,6 @@ import re
 from dotenv import dotenv_values
 from scripts.utils.log_to_file import log_to_file
 from pathlib import Path
-from binaryornot.check import is_binary
 
 
 regex_mysql = re.compile(r"^[A-Za-z\_]+$")
@@ -115,11 +114,6 @@ def validate_env(script_root):
         if temp['LOG_LOC'] == '':
             log_to_file("Env file configured incorrectly: LOG_LOC is either empty or not a file.", "ERROR")
             env_errs.append("Env file configured incorrectly: LOG_LOC is either empty or not a file.")
-
-        if os.path.exists(temp['LOG_LOC']):
-            if is_binary(temp['LOG_LOC']):
-                log_to_file("Env file configured incorrectly: LOG_LOC is binary.", "ERROR")
-                env_errs.append("Env file configured incorrectly: LOG_LOC is binary.")
     else:
         log_to_file("LOG_LOC is not in .env", "ERROR")
         not_in_env.append("LOG_LOC")
