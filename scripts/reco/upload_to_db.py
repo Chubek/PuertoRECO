@@ -23,7 +23,7 @@ detector = MTCNN()
 
 def verify_image(img_arr):
     detection = detector.detect_faces(img_arr)
-
+    log_to_file(f"Detected {detection}", "DEBUG")
     if len(detection) == 0 or len(detection) > 1:
         return []
 
