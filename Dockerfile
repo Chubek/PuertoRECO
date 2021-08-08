@@ -2,17 +2,8 @@ FROM continuumio/miniconda:latest
 
 WORKDIR /home/reco_app
 
-COPY faceapp.py ./
-COPY boot.sh ./
-COPY scripts/ ./
-COPY templates/ ./
-COPY unit_tests/ ./
-COPY .env ./
-COPY codes_dict.py ./
-COPY requirements.txt ./
-COPY README.md ./
-COPY main.py ./
-COPY environment.yml ./
+COPY . ./
+
 
 RUN apt-get update && apt-get install build-essential libsvm-dev -y
 
