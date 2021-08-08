@@ -36,7 +36,7 @@ def validate_env(script_root):
 
 
     if 'DB_PATH' in temp:
-        if temp['DB_PATH'] == "" or not os.path.isdir(temp['DB_PATH']):    
+        if temp['DB_PATH'] == "":    
             log_to_file("Env file configured incorrectly: DB_PATH not set or is not a directory.", "ERROR")
             env_errs.append("Env file configured incorrectly: DB_PATH not set or is not a directory.")
     else:
@@ -44,7 +44,7 @@ def validate_env(script_root):
         not_in_env.append("DB_PATH")
 
     if 'MODEL_PATH' in temp:
-        if temp['MODEL_PATH'] == "" or not os.path.isdir(temp['MODEL_PATH']):
+        if temp['MODEL_PATH'] == "":
             log_to_file("Env file configured incorrectly: MODEL_PATH not set or is not a directory.", "ERROR")
             env_errs.append("Env file configured incorrectly: MODEL_PATH not set or is not a directory.")
     else:
@@ -112,7 +112,7 @@ def validate_env(script_root):
         not_in_env.append("SIM_FUNC")
 
     if 'LOG_LOC' in temp:
-        if temp['LOG_LOC'] == '' or not os.path.isfile(temp['LOG_LOC']):
+        if temp['LOG_LOC'] == '':
             log_to_file("Env file configured incorrectly: LOG_LOC is either empty or not a file.", "ERROR")
             env_errs.append("Env file configured incorrectly: LOG_LOC is either empty or not a file.")
 
