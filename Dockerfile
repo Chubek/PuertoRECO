@@ -17,10 +17,10 @@ COPY environment.yml ./
 
 RUN chmod +x boot.sh
 
+RUN conda env create -f environment.yml
 
-SHELL ["conda", "run", "-n", "reco3", "/bin/bash", "-c"]
-SHELL ["pip", "install", "-r", "requirements.txt"]
 
+RUN echo "source activate reco3" > ~/.bashrc
 ENV PATH /opt/conda/envs/reco3/bin:$PATH
 
 EXPOSE 5000

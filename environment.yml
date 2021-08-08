@@ -3,4 +3,24 @@ channels:
   - default
 dependencies:
   - python=3.9
-  - pip
+  - flask
+  - pip:
+    - git+https://github.com/ipazc/mtcnn.git
+    - deepface
+    - mysql-connector-python
+    - opencv-python
+    - imgaug
+    - flask
+    - python-dotenv
+    - gdown
+    - dnspython
+    - binaryornot
+    - imagecorruptions
+    - from-root
+    - image-quality
+    - joblib
+    - tqdm
+    - flask-cors
+    - tensorflow
+    - uwsgi
+    - gunicorn
