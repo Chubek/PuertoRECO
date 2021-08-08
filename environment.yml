@@ -5,7 +5,7 @@ dependencies:
   - python=3.9
   - flask
   - pip:
-    - git+https://github.com/ipazc/mtcnn.git
+    - mtcnn
     - deepface
     - mysql-connector-python
     - opencv-python
