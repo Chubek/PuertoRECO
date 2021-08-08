@@ -1,0 +1,6 @@
+name: reco3
+channels:
+  - default
+dependencies:
+  - python=3.9
+  - pip
