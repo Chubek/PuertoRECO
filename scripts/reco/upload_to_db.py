@@ -21,15 +21,14 @@ from shutil import rmtree
 temp = dotenv_values(".env")
 detector = MTCNN()
 
-def verify_image(img_path, img_arr):
-    detection = DeepFace.analyze(img_path, detector_backend = 'retinaface')
+def verify_image(img_arr):
+    detection = detector.detect_faces(img_arr)
 
-    log_to_file(f"Detected {detection}", "DEBUG")
     if len(detection) == 0 or len(detection) > 1:
         return []
 
-    bb = detection['region']
-    face = img_arr[bb['y']:bb['y'] + bb['h'], bb['x']:bb['x'] + bb['w']]
+    bb = detection[0]['box']
+    face = img_arr[bb[1]:bb[1] + bb[3], bb[0]:bb[0] + bb[2]]
     return face
 
 def resize_img(img_arr):
@@ -127,8 +126,7 @@ def main_upload(img_paths, id_, name, delete_pickle, rebuild_db, in_place):
     for i in range(len(arrs)):     
 
         log_to_file(f"Detecting face for {img_paths[i]}", "INFO")
-        img_det = verify_image(img_paths[i - deleted], arrs[i - deleted])     
-        
+        img_det = verify_image(arrs[i - deleted])
         if len(img_det) == 0:
             log_to_file(f"Failed to detect face in image {img_paths[i]} at\
                  index {i} or there was more than one face... Removing and continuing.", "WARNING")
