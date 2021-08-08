@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+  web:
+    build:
+      context: ./services/web
+      dockerfile: Dockerfile
+    command: gunicorn --bind 0.0.0.0:5000 faceapp:app
+    volumes:
+      - static_volume:/home/reco_app/static
+    expose:
+      - 5000
+
+  nginx:
+    build: ./services/nginx
+    volumes:
+      - static_volume:/home/reco_app/static
+    ports:
+      - 1337:80
+    depends_on:
+      - web
+
+volumes:
+  static_volume:
