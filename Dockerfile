@@ -2,7 +2,6 @@ FROM continuumio/miniconda:latest
 
 WORKDIR /home/docker_conda_template
 
-COPY environment.yml ./
 COPY faceapp.py ./
 COPY boot.sh ./
 COPY scripts/ ./
