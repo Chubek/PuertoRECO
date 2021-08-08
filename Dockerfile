@@ -17,6 +17,7 @@ COPY main.py ./
 RUN chmod +x boot.sh
 
 RUN conda create -n reco3 python=3.9
+RUN conda init bash
 RUN conda activate reco3
 RUN pip install -r requirements.txt
 
