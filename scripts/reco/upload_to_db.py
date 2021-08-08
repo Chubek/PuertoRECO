@@ -22,7 +22,7 @@ temp = dotenv_values(".env")
 detector = MTCNN()
 
 def verify_image(img_path, img_arr):
-    detection = DeepFace.analyze(img_path, detector_backend = 'mtcnn')
+    detection = DeepFace.analyze(img_path, detector_backend = 'retinaface')
 
     log_to_file(f"Detected {detection}", "DEBUG")
     if len(detection) == 0 or len(detection) > 1:

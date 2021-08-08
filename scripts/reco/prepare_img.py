@@ -49,7 +49,7 @@ def prepare_img(img_path):
     log_to_file(f"Getting face for {img_path}...", "INFO")
 
     try:
-        detection = DeepFace.analyze(img_path, detector_backend = 'mtcnn')['region']
+        detection = DeepFace.analyze(img_path, detector_backend = 'retinaface')['region']
     except:
         log_to_file(f"{img_path} failed to detect a face.")
         return []
