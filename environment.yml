@@ -3,8 +3,7 @@ channels:
   - default
 dependencies:
   - python=3.9
-  - flask
-  - pip==21.2.3
+  - pip
   - pip:
     - mtcnn
     - deepface

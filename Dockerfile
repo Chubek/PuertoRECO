@@ -14,6 +14,7 @@ COPY README.md ./
 COPY main.py ./
 COPY environment.yml ./
 
+RUN conda update -n base conda
 
 RUN chmod +x boot.sh
 
