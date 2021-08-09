@@ -342,7 +342,7 @@ def validate_score_tol(script_root):
         not_in_env.append("SCORE_TOL")
 
     if 'UPLOAD_FOLDER' in temp:
-        if temp['UPLOAD_FOLDER'] == '' or not os.path.isdir(temp['UPLOAD_FOLDER']):
+        if temp['UPLOAD_FOLDER'] == '':
             log_to_file("Env file configured incorrectly: UPLOAD_FOLDER is empty string or is not a path.", "ERROR")
             env_errs.append("Env file configured incorrectly: UPLOAD_FOLDER is empty string or is noth a path.")
         
