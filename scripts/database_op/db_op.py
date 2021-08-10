@@ -38,8 +38,18 @@ except:
 
 
 def insert_to_db(id_, name, db_path, in_place_id=False):
-    cursor = db_client.cursor()
-    
+    global db_client
+    try:
+        cursor = db_client.cursor()
+    except:
+        db_client = mysql.connector.connect(
+            host=sql_uri['URI'],
+            user=sql_uri['USER'],
+            password=sql_uri['PASS'],
+            database=sql_uri['SCHEMA']
+        )
+        cursor = db_client.cursor()
+
     if in_place_id == 850 or (in_place_id != 800 and in_place_id != 838):
         cursor.execute(COMMAND_UPDATE_NAME, (name, id_))
         cursor.execute(COMMAND_UPDATE_PATH, (db_path, id_))
@@ -65,7 +75,17 @@ def insert_to_db(id_, name, db_path, in_place_id=False):
 
 def select_from_db(id_):
     log_to_file(f"Selecting from DB given ID {id_}", "INFO")
-    cursor = db_client.cursor()
+    global db_client
+    try:
+        cursor = db_client.cursor()
+    except:
+        db_client = mysql.connector.connect(
+            host=sql_uri['URI'],
+            user=sql_uri['USER'],
+            password=sql_uri['PASS'],
+            database=sql_uri['SCHEMA']
+        )
+        cursor = db_client.cursor()
 
     cursor.execute(COMMAND_SELECT(id_))
 
